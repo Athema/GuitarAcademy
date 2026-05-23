@@ -1,0 +1,58 @@
+<template>
+    <div class="player-page">
+        <template if:true={video}>
+            <div class="video-info">
+                <span class={levelClass}>{video.Level__c}</span>
+                <h1>{video.Name}</h1>
+                <div class="meta">
+                    <span>{video.Category__c}</span>
+                    <template if:true={video.Duration_Minutes__c}>
+                        <span>&bull; {video.Duration_Minutes__c} min</span>
+                    </template>
+                    <template if:false={hasAccess}>
+                        <span class="price">&bull; ${video.Price__c}</span>
+                    </template>
+                </div>
+                <p class="description">{video.Description__c}</p>
+            </div>
+
+            <div class="player-container">
+                <template if:true={isPlaying}>
+                    <iframe
+                        class="yt-frame"
+                        src={iframeSrc}
+                        title={video.Name}
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+
+                    <template if:true={showOverlay}>
+                        <div class="preview-overlay">
+                            <div class="overlay-content">
+                                <p class="overlay-title">That&apos;s the preview!</p>
+                                <p class="overlay-sub">
+                                    Talk to our assistant to purchase this lesson (${video.Price__c})
+                                    or subscribe for full access to all lessons.
+                                </p>
+                                <button class="replay-btn" onclick={handleReplay}>&#9654; Replay Preview</button>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+
+                <template if:false={isPlaying}>
+                    <img class="poster" src={video.Thumbnail_URL__c} alt={video.Name} />
+                </template>
+            </div>
+
+            <button class={playBtnClass} onclick={handlePlay}>
+                &#9654; {playBtnLabel}
+            </button>
+        </template>
+
+        <template if:false={video}>
+            <div class="loading">Loading lesson&hellip;</div>
+        </template>
+    </div>
+</template>

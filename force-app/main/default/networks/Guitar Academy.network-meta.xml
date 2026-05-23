@@ -36,6 +36,7 @@
     <headlessRegistrationTemplate>unfiled$public/CommunityHeadlessRegistrationTemplate</headlessRegistrationTemplate>
     <networkMemberGroups>
         <profile>admin</profile>
+        <profile>Customer Community User</profile>
     </networkMemberGroups>
     <networkPageOverrides>
         <changePasswordPageOverrideSetting>Standard</changePasswordPageOverrideSetting>
@@ -45,7 +46,7 @@
         <selfRegProfilePageOverrideSetting>Designer</selfRegProfilePageOverrideSetting>
     </networkPageOverrides>
     <picassoSite>Guitar_Academy1</picassoSite>
-    <selfRegistration>false</selfRegistration>
+    <selfRegistration>true</selfRegistration>
     <sendWelcomeEmail>true</sendWelcomeEmail>
     <site>Guitar_Academy</site>
     <siteArchiveStatus>NotArchived</siteArchiveStatus>

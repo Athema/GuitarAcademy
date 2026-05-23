@@ -3,6 +3,60 @@
     <description>Grants Guitar Academy students access to the video catalog and their own purchases and subscriptions.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Guitar Academy Student</label>
+    <classAccesses>
+        <apexClass>GuitarVideoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Duration_Minutes__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Is_Featured__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Is_Free_Preview__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Level__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Price__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Guitar_Video__c.Thumbnail_URL__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Video_Purchase__c.Amount_Paid__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Video_Purchase__c.Purchase_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <objectPermissions>
         <allowCreate>false</allowCreate>
         <allowDelete>false</allowDelete>

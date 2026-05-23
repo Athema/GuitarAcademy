@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>Guitar Academy Access</masterLabel>
+    <isExposed>true</isExposed>
+    <description>Published by the Agentforce agent when a student purchases a video or subscribes, so the player switches from preview to full playback without a page reload.</description>
+    <lightningMessageFields>
+        <fieldName>videoId</fieldName>
+        <description>Salesforce Record ID of the Guitar_Video__c that was purchased. Empty means a subscription was purchased (all videos unlocked).</description>
+    </lightningMessageFields>
+</LightningMessageChannel>

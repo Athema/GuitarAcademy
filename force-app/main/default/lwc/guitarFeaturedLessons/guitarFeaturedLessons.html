@@ -1,0 +1,24 @@
+<template>
+    <div class="featured">
+        <div class="featured-header">
+            <h2>Featured Lessons</h2>
+            <a class="browse-all" onclick={handleBrowseAll}>Browse All &rarr;</a>
+        </div>
+
+        <template if:true={hasVideos}>
+            <div class="featured-grid">
+                <template for:each={videos} for:item="video">
+                    <c-guitar-video-card key={video.Id} video={video}></c-guitar-video-card>
+                </template>
+            </div>
+        </template>
+
+        <template if:true={hasError}>
+            <p style="color:red">Error: {errorMessage}</p>
+        </template>
+
+        <template if:true={isEmpty}>
+            <p style="color:orange">No featured videos found.</p>
+        </template>
+    </div>
+</template>

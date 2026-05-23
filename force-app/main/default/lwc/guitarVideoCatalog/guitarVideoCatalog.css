@@ -1,0 +1,65 @@
+.catalog {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 16px;
+}
+
+.catalog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.catalog-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-group label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.filter-group select {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4e;
+    color: #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.empty-state,
+.error-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+    font-size: 1rem;
+}
