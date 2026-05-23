@@ -3,5 +3,6 @@
     <fullName>Is_Free_Preview__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Free Preview</label>
+    <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

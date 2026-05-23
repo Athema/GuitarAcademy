@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<McpServerDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Guitar Academy MCP Server</description>
+    <masterLabel>Guitar Academy</masterLabel>
+</McpServerDefinition>

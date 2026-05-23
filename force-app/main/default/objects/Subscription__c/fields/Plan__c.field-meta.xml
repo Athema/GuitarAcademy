@@ -3,6 +3,7 @@
     <fullName>Plan__c</fullName>
     <label>Plan</label>
     <required>true</required>
+    <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
