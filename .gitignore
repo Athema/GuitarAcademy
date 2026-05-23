@@ -42,6 +42,9 @@ $RECYCLE.BIN/
 # Local environment variables
 .env
 
+# MCP config contains live OAuth tokens — keep out of git
+.mcp.json
+
 # Python Salesforce Functions
 **/__pycache__/
 **/.venv/
