@@ -172,11 +172,11 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
     }
 
     handleSubscribeMonthly() {
-        this._subscribe('Monthly $9.99');
+        this._subscribe('Monthly');
     }
 
     handleSubscribeAnnual() {
-        this._subscribe('Annual $79.99');
+        this._subscribe('Annual');
     }
 
     _subscribe(plan) {

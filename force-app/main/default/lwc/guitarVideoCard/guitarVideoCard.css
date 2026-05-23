@@ -45,7 +45,7 @@
 
 .owned-badge {
     position: absolute;
-    top: 8px;
+    bottom: 8px;
     right: 8px;
     background: #22c55e;
     color: #fff;
