@@ -3,6 +3,7 @@ import { NavigationMixin } from 'lightning/navigation';
 
 export default class GuitarVideoCard extends NavigationMixin(LightningElement) {
     @api video;
+    @api isOwned = false;
 
     get levelClass() {
         const level = (this.video?.Level__c || '').toLowerCase();

@@ -3,6 +3,9 @@
         <div class="thumbnail-wrap">
             <img src={video.Thumbnail_URL__c} alt={video.Name} loading="lazy" onerror={handleImgError} />
             <span class={levelClass}>{video.Level__c}</span>
+            <template if:true={isOwned}>
+                <span class="owned-badge">&#10003;</span>
+            </template>
         </div>
         <div class="card-body">
             <h3 class="title">{video.Name}</h3>

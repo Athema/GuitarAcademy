@@ -1,9 +1,12 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
-import { subscribe, MessageContext } from 'lightning/messageService';
+import { subscribe, publish, MessageContext } from 'lightning/messageService';
 import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import hasVideoAccess from '@salesforce/apex/GuitarVideoController.hasVideoAccess';
+import purchaseVideo from '@salesforce/apex/GuitarVideoController.purchaseVideo';
+import createSubscription from '@salesforce/apex/GuitarVideoController.createSubscription';
 import GUITAR_ACADEMY_ACCESS from '@salesforce/messageChannel/GuitarAcademyAccess__c';
+import DIRECT_PURCHASE_ENABLED from '@salesforce/label/c.Direct_Purchase_Enabled';
 
 import NAME_FIELD        from '@salesforce/schema/Guitar_Video__c.Name';
 import YOUTUBE_ID_FIELD  from '@salesforce/schema/Guitar_Video__c.YouTube_ID__c';
@@ -23,6 +26,9 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
     @track hasAccess = false;
     @track isPlaying = false;
     @track showOverlay = false;
+    @track showAccessPanel = false;
+    @track isBusy = false;
+    @track actionSuccess = '';
 
     _previewTimer;
     _accessChecked = false;
@@ -74,18 +80,45 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
         return this.hasAccess ? 'play-btn play-btn--full' : 'play-btn play-btn--preview';
     }
 
+    get isDirectPurchaseEnabled() {
+        return DIRECT_PURCHASE_ENABLED === 'true';
+    }
+
+    get showGetAccessButton() {
+        return !this.hasAccess && !!this.video && this.isDirectPurchaseEnabled;
+    }
+
+    get accessPanelIcon() {
+        return this.showAccessPanel ? '▲' : '▼';
+    }
+
+    get purchaseBtnLabel() {
+        if (this.actionSuccess === 'purchase') return '✓ Purchased!';
+        return this.isBusy ? 'Processing...' : `Buy once — $${this.video?.Price__c}`;
+    }
+
+    get monthlyBtnLabel() {
+        if (this.actionSuccess === 'subscribe') return '✓ Subscribed!';
+        return this.isBusy ? 'Processing...' : 'Monthly — $9.99/mo';
+    }
+
+    get annualBtnLabel() {
+        if (this.actionSuccess === 'subscribe') return '✓ Subscribed!';
+        return this.isBusy ? 'Processing...' : 'Annual — $79.99/yr (save 33%)';
+    }
+
     connectedCallback() {
         subscribe(this.messageContext, GUITAR_ACADEMY_ACCESS, msg => {
             if (!msg.videoId || msg.videoId === this.recordId) {
                 this.hasAccess = true;
                 this.showOverlay = false;
+                this.showAccessPanel = false;
                 this._clearPreviewTimer();
                 if (this.isPlaying) this._reloadIframe();
             }
         });
     }
 
-    // Called once the record wire resolves and we have a recordId
     renderedCallback() {
         if (this.recordId && !this._accessChecked) {
             this._accessChecked = true;
@@ -118,6 +151,55 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
         this._clearPreviewTimer();
         this._reloadIframe();
         this._startPreviewTimer();
+    }
+
+    handleToggleAccessPanel() {
+        this.showAccessPanel = !this.showAccessPanel;
+    }
+
+    handlePurchaseVideo() {
+        if (this.isBusy) return;
+        this.isBusy = true;
+        purchaseVideo({ videoId: this.recordId })
+            .then(() => {
+                this.actionSuccess = 'purchase';
+                this._grantAccess();
+            })
+            .catch(err => {
+                console.error('Purchase failed', err);
+            })
+            .finally(() => { this.isBusy = false; });
+    }
+
+    handleSubscribeMonthly() {
+        this._subscribe('Monthly $9.99');
+    }
+
+    handleSubscribeAnnual() {
+        this._subscribe('Annual $79.99');
+    }
+
+    _subscribe(plan) {
+        if (this.isBusy) return;
+        this.isBusy = true;
+        createSubscription({ plan })
+            .then(() => {
+                this.actionSuccess = 'subscribe';
+                this._grantAccess();
+            })
+            .catch(err => {
+                console.error('Subscription failed', err);
+            })
+            .finally(() => { this.isBusy = false; });
+    }
+
+    _grantAccess() {
+        this.hasAccess = true;
+        this.showOverlay = false;
+        this.showAccessPanel = false;
+        this._clearPreviewTimer();
+        publish(this.messageContext, GUITAR_ACADEMY_ACCESS, { videoId: this.recordId });
+        if (this.isPlaying) this._reloadIframe();
     }
 
     _startPreviewTimer() {

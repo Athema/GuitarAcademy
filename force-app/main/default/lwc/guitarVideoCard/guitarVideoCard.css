@@ -43,6 +43,23 @@
 .level-intermediate { background: #f59e0b; color: #fff; }
 .level-advanced  { background: #ef4444; color: #fff; }
 
+.owned-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #22c55e;
+    color: #fff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
 .card-body {
     padding: 12px 14px 14px;
 }

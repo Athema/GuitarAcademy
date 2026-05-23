@@ -47,9 +47,40 @@
                 </template>
             </div>
 
-            <button class={playBtnClass} onclick={handlePlay}>
-                &#9654; {playBtnLabel}
-            </button>
+            <div class="player-actions">
+                <button class={playBtnClass} onclick={handlePlay}>
+                    &#9654; {playBtnLabel}
+                </button>
+
+                <template if:true={showGetAccessButton}>
+                    <button class="get-access-btn" onclick={handleToggleAccessPanel}>
+                        &#128275; Get Access {accessPanelIcon}
+                    </button>
+                </template>
+            </div>
+
+            <template if:true={showGetAccessButton}>
+                <template if:true={showAccessPanel}>
+                    <div class="access-panel">
+                        <h3 class="access-panel-title">Unlock this lesson</h3>
+
+                        <button class="buy-btn buy-btn--once" onclick={handlePurchaseVideo} disabled={isBusy}>
+                            {purchaseBtnLabel}
+                        </button>
+
+                        <div class="or-divider">— or subscribe for all lessons —</div>
+
+                        <div class="subscribe-options">
+                            <button class="buy-btn buy-btn--monthly" onclick={handleSubscribeMonthly} disabled={isBusy}>
+                                {monthlyBtnLabel}
+                            </button>
+                            <button class="buy-btn buy-btn--annual" onclick={handleSubscribeAnnual} disabled={isBusy}>
+                                {annualBtnLabel}
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </template>
         </template>
 
         <template if:false={video}>

@@ -7,8 +7,8 @@
 
         <template if:true={hasVideos}>
             <div class="featured-grid">
-                <template for:each={videos} for:item="video">
-                    <c-guitar-video-card key={video.Id} video={video}></c-guitar-video-card>
+                <template for:each={videosWithAccess} for:item="item">
+                    <c-guitar-video-card key={item.key} video={item.video} is-owned={item.isOwned}></c-guitar-video-card>
                 </template>
             </div>
         </template>
