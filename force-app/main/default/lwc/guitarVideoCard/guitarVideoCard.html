@@ -10,7 +10,12 @@
                 <span class="category">{video.Category__c}</span>
                 <span class="duration">{video.Duration_Minutes__c} min</span>
             </div>
-            <p class="price">${video.Price__c}</p>
+            <div class="price-row">
+                <p class="price">${video.Price__c}</p>
+                <template if:true={isOwned}>
+                    <span class="owned-check">&#10003; Owned</span>
+                </template>
+            </div>
         </div>
     </div>
 </template>

@@ -132,6 +132,15 @@
     color: #e2e8f0;
 }
 
+/* Action row below the player */
+.player-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
 .play-btn {
     display: inline-flex;
     align-items: center;
@@ -157,6 +166,98 @@
 
 .play-btn--full {
     background: #f97316;
+    color: #fff;
+}
+
+.get-access-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: #0f172a;
+    color: #f97316;
+    border: 2px solid #f97316;
+    transition: background 0.2s, color 0.2s;
+}
+
+.get-access-btn:hover {
+    background: #f97316;
+    color: #fff;
+}
+
+/* Access panel */
+.access-panel {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-top: 4px;
+}
+
+.access-panel-title {
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f97316;
+}
+
+.buy-btn {
+    display: block;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+    text-align: center;
+}
+
+.buy-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.buy-btn:hover:not(:disabled) {
+    opacity: 0.88;
+}
+
+.buy-btn--once {
+    background: #f97316;
+    color: #fff;
+    margin-bottom: 16px;
+}
+
+.or-divider {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+}
+
+.subscribe-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.subscribe-options .buy-btn {
+    flex: 1;
+    min-width: 160px;
+}
+
+.buy-btn--monthly {
+    background: #1e40af;
+    color: #fff;
+}
+
+.buy-btn--annual {
+    background: #7c3aed;
     color: #fff;
 }
 

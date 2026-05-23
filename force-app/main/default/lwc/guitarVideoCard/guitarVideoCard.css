@@ -63,9 +63,21 @@
     margin-bottom: 8px;
 }
 
+.price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .price {
     margin: 0;
     font-size: 0.9rem;
     font-weight: 700;
     color: #f97316;
+}
+
+.owned-check {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #22c55e;
 }
