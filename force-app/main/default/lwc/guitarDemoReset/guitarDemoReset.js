@@ -1,5 +1,6 @@
 import { LightningElement, track } from 'lwc';
 import resetDemo from '@salesforce/apex/GuitarVideoController.resetDemo';
+import basePath from '@salesforce/community/basePath';
 
 export default class GuitarDemoReset extends LightningElement {
     @track state = 'idle'; // idle | confirm | busy | done
@@ -31,7 +32,7 @@ export default class GuitarDemoReset extends LightningElement {
             .then(() => {
                 this.state = 'done';
                 // eslint-disable-next-line @lwc/lwc/no-async-operation
-                setTimeout(() => { this.state = 'idle'; }, 2000);
+                setTimeout(() => { window.location.assign(basePath); }, 1500);
             })
             .catch(() => { this.state = 'idle'; });
     }
