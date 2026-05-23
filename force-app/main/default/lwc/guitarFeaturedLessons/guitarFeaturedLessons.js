@@ -27,6 +27,16 @@ export default class GuitarFeaturedLessons extends NavigationMixin(LightningElem
         }));
     }
 
+    get subscriptionLabel() {
+        const info = this.accessInfo;
+        if (!info?.isSubscribed) return '';
+        const d = info.subscriptionEndDate;
+        if (!d) return 'Subscribed';
+        const [year, month, day] = d.split('-');
+        const formatted = new Date(+year, +month - 1, +day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return `Subscribed until ${formatted}`;
+    }
+
     get hasVideos() {
         return this.wiredVideos?.data?.length > 0;
     }

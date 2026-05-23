@@ -1,7 +1,12 @@
 <template>
     <div class="catalog">
         <div class="catalog-header">
-            <h1>Guitar Lessons</h1>
+            <div class="title-row">
+                <h1>Guitar Lessons</h1>
+                <template if:true={subscriptionLabel}>
+                    <span class="sub-badge">&#10003; {subscriptionLabel}</span>
+                </template>
+            </div>
             <div class="filters">
                 <div class="filter-group">
                     <label for="level-filter">Level</label>

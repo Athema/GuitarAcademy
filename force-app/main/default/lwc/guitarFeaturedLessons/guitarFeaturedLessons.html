@@ -1,7 +1,12 @@
 <template>
     <div class="featured">
         <div class="featured-header">
-            <h2>Featured Lessons</h2>
+            <div class="title-row">
+                <h2>Featured Lessons</h2>
+                <template if:true={subscriptionLabel}>
+                    <span class="sub-badge">&#10003; {subscriptionLabel}</span>
+                </template>
+            </div>
             <a class="browse-all" onclick={handleBrowseAll}>Browse All &rarr;</a>
         </div>
 

@@ -3,9 +3,11 @@ public without sharing class GuitarVideoController {
     public class AccessInfo {
         @AuraEnabled public Boolean isSubscribed;
         @AuraEnabled public List<Id> purchasedVideoIds;
-        AccessInfo(Boolean sub, List<Id> ids) {
+        @AuraEnabled public Date subscriptionEndDate;
+        AccessInfo(Boolean sub, List<Id> ids, Date endDate) {
             this.isSubscribed = sub;
             this.purchasedVideoIds = ids;
+            this.subscriptionEndDate = endDate;
         }
     }
 
@@ -40,13 +42,15 @@ public without sharing class GuitarVideoController {
     @AuraEnabled(cacheable=false)
     public static AccessInfo getMyAccess() {
         Id contactId = getContactId();
-        if (contactId == null) return new AccessInfo(false, new List<Id>());
-        Boolean isSubscribed = [SELECT COUNT() FROM Subscription__c WHERE Contact__c = :contactId AND Status__c = 'Active'] > 0;
+        if (contactId == null) return new AccessInfo(false, new List<Id>(), null);
+        List<Subscription__c> subs = [SELECT End_Date__c FROM Subscription__c WHERE Contact__c = :contactId AND Status__c = 'Active' LIMIT 1];
+        Boolean isSubscribed = !subs.isEmpty();
+        Date endDate = isSubscribed ? subs[0].End_Date__c : null;
         List<Id> purchasedIds = new List<Id>();
         for (Video_Purchase__c vp : [SELECT Video__c FROM Video_Purchase__c WHERE Contact__c = :contactId]) {
             purchasedIds.add(vp.Video__c);
         }
-        return new AccessInfo(isSubscribed, purchasedIds);
+        return new AccessInfo(isSubscribed, purchasedIds, endDate);
     }
 
     @AuraEnabled(cacheable=false)
@@ -65,7 +69,8 @@ public without sharing class GuitarVideoController {
         List<Subscription__c> existing = [SELECT Id FROM Subscription__c WHERE Contact__c = :contactId AND Status__c = 'Active'];
         for (Subscription__c s : existing) s.Status__c = 'Cancelled';
         if (!existing.isEmpty()) update existing;
-        insert new Subscription__c(Contact__c = contactId, Plan__c = plan, Status__c = 'Active');
+        Date endDate = plan == 'Annual' ? Date.today().addYears(1) : Date.today().addMonths(1);
+        insert new Subscription__c(Contact__c = contactId, Plan__c = plan, Status__c = 'Active', End_Date__c = endDate);
     }
 
     private static Id getContactId() {
