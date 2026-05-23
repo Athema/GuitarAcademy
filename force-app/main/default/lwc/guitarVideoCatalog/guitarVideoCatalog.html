@@ -1,0 +1,48 @@
+<template>
+    <div class="catalog">
+        <div class="catalog-header">
+            <h1>Guitar Lessons</h1>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="level-filter">Level</label>
+                    <select id="level-filter" onchange={handleLevelChange}>
+                        <option value="">All Levels</option>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="cat-filter">Category</label>
+                    <select id="cat-filter" onchange={handleCategoryChange}>
+                        <option value="">All Categories</option>
+                        <option value="Technique">Technique</option>
+                        <option value="Theory">Theory</option>
+                        <option value="Song Lesson">Song Lesson</option>
+                        <option value="Gear &amp; Tone">Gear &amp; Tone</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <template if:true={hasVideos}>
+            <div class="video-grid">
+                <template for:each={videos} for:item="video">
+                    <c-guitar-video-card key={video.Id} video={video}></c-guitar-video-card>
+                </template>
+            </div>
+        </template>
+
+        <template if:true={isEmpty}>
+            <div class="empty-state">
+                <p>No lessons match your filters.</p>
+            </div>
+        </template>
+
+        <template if:true={hasError}>
+            <div class="error-state">
+                <p>Unable to load lessons. Please try again.</p>
+            </div>
+        </template>
+    </div>
+</template>

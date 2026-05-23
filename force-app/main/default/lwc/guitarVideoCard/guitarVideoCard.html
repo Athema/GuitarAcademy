@@ -1,0 +1,16 @@
+<template>
+    <div class="card" onclick={handleClick}>
+        <div class="thumbnail-wrap">
+            <img src={video.Thumbnail_URL__c} alt={video.Name} loading="lazy" onerror={handleImgError} />
+            <span class={levelClass}>{video.Level__c}</span>
+        </div>
+        <div class="card-body">
+            <h3 class="title">{video.Name}</h3>
+            <div class="meta">
+                <span class="category">{video.Category__c}</span>
+                <span class="duration">{video.Duration_Minutes__c} min</span>
+            </div>
+            <p class="price">${video.Price__c}</p>
+        </div>
+    </div>
+</template>

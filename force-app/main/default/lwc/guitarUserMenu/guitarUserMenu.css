@@ -1,0 +1,38 @@
+:host {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;
+    padding: 0 16px;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.user-name {
+    font-weight: 600;
+    color: inherit;
+}
+
+.logout-link {
+    color: inherit;
+    text-decoration: none;
+    border: 1px solid currentColor;
+    padding: 4px 10px;
+    border-radius: 4px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.logout-link:hover {
+    opacity: 1;
+}
