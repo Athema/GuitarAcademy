@@ -130,6 +130,13 @@ flowchart TD
 
     INT -- Something else --> FB[Agent uses Knowledge\nto answer questions about\nlesson content technique theory etc]
     FB --> INT
+
+    INT -- Needs human support --> ESC{Escalation trigger\neg. billing dispute · complaint\ntechnical issue · explicit request}
+    ESC --> HT[Agent offers to connect\nwith a human coach]
+    HT --> UC{User confirms?}
+    UC -- Yes --> OM[Omnichannel routing\ntransfer to available agent\nwith full conversation context]
+    UC -- No --> INT
+    OM --> HA([Human agent takes over\nin Service Console])
 ```
 
 ---
