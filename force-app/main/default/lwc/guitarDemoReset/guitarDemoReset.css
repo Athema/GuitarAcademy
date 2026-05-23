@@ -1,0 +1,46 @@
+:host {
+    display: flex;
+    align-items: center;
+}
+
+.reset-btn {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.reset-btn--idle {
+    background: transparent;
+    color: #94a3b8;
+    border-color: #475569;
+}
+
+.reset-btn--idle:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+.reset-btn--confirm {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+.reset-btn--busy {
+    background: transparent;
+    color: #64748b;
+    border-color: #334155;
+    cursor: not-allowed;
+}
+
+.reset-btn--done {
+    background: #22c55e;
+    color: #fff;
+    border-color: #22c55e;
+}

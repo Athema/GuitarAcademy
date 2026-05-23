@@ -73,6 +73,12 @@ public without sharing class GuitarVideoController {
         insert new Subscription__c(Contact__c = contactId, Plan__c = plan, Status__c = 'Active', End_Date__c = endDate);
     }
 
+    @AuraEnabled(cacheable=false)
+    public static void resetDemo() {
+        delete [SELECT Id FROM Video_Purchase__c];
+        delete [SELECT Id FROM Subscription__c];
+    }
+
     private static Id getContactId() {
         List<User> users = [SELECT ContactId FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
         return (users.isEmpty() || users[0].ContactId == null) ? null : users[0].ContactId;
