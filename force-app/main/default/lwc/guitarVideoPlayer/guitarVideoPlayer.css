@@ -8,11 +8,26 @@
     margin-bottom: 20px;
 }
 
+.back-link {
+    display: block;
+    text-align: right;
+    margin-bottom: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #f97316;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
 .video-info h1 {
     margin: 8px 0 6px;
     font-size: 1.6rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: #1e293b;
     line-height: 1.2;
 }
 
@@ -31,7 +46,7 @@
 }
 
 .description {
-    color: #cbd5e1;
+    color: #1e293b;
     font-size: 0.95rem;
     line-height: 1.6;
     margin: 0;

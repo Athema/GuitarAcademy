@@ -1,7 +1,7 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { subscribe, MessageContext } from 'lightning/messageService';
-import { CurrentPageReference } from 'lightning/navigation';
+import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import hasVideoAccess from '@salesforce/apex/GuitarVideoController.hasVideoAccess';
 import GUITAR_ACADEMY_ACCESS from '@salesforce/messageChannel/GuitarAcademyAccess__c';
 
@@ -18,7 +18,7 @@ const FIELDS = [NAME_FIELD, YOUTUBE_ID_FIELD, LEVEL_FIELD, CATEGORY_FIELD, PRICE
 const PREVIEW_SECONDS = 20;
 const OVERLAY_DELAY_MS = (PREVIEW_SECONDS + 2) * 1000;
 
-export default class GuitarVideoPlayer extends LightningElement {
+export default class GuitarVideoPlayer extends NavigationMixin(LightningElement) {
     @api recordId;
     @track hasAccess = false;
     @track isPlaying = false;
@@ -97,6 +97,13 @@ export default class GuitarVideoPlayer extends LightningElement {
 
     disconnectedCallback() {
         this._clearPreviewTimer();
+    }
+
+    handleBack() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__webPage',
+            attributes: { url: '/catalog' }
+        });
     }
 
     handlePlay() {

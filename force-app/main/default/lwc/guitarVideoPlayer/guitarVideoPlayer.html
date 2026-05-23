@@ -2,6 +2,7 @@
     <div class="player-page">
         <template if:true={video}>
             <div class="video-info">
+                <a class="back-link" onclick={handleBack}>&larr; Back to Catalog</a>
                 <span class={levelClass}>{video.Level__c}</span>
                 <h1>{video.Name}</h1>
                 <div class="meta">
