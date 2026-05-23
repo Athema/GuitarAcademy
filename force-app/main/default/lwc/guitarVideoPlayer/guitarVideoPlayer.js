@@ -205,6 +205,8 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
     _startPreviewTimer() {
         this._previewTimer = setTimeout(() => {
             this.showOverlay = true;
+            const iframe = this.template.querySelector('.yt-frame');
+            if (iframe) iframe.src = '';
         }, OVERLAY_DELAY_MS);
     }
 
