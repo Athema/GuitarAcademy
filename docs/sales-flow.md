@@ -25,11 +25,19 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    F([Home Page]) --> H[Featured Lessons section\n3 highlighted videos]
-    F --> I[Catalog page\nall videos with Level + Category filters]
+    F([Home Page]) --> ACC[getMyAccess\nisSubscribed · purchasedVideoIds · subscriptionEndDate]
+
+    ACC --> H[Featured Lessons section\n3 highlighted videos]
+    ACC --> BADGE{Has active subscription?}
+    BADGE -- Yes --> SB[Subscribed until date\nbadge shown next to section title\nall cards show ✓ Owned]
+    BADGE -- No --> OB[Per-video: ✓ Owned badge\nif Id in purchasedVideoIds]
 
     H --> J[Click video card]
-    I --> J
+
+    F --> I[Catalog page\nall videos with Level + Category filters]
+    I --> ACC2[getMyAccess\nsame check on catalog load]
+    ACC2 --> I2[Cards render with isOwned flag\nsubscription badge in header if subscribed]
+    I2 --> J
 
     J --> K([Video Player Page])
 ```
@@ -122,6 +130,13 @@ flowchart TD
 
     INT -- Something else --> FB[Agent uses Knowledge\nto answer questions about\nlesson content technique theory etc]
     FB --> INT
+
+    INT -- Needs human support --> ESC{Escalation trigger\neg. billing dispute · complaint\ntechnical issue · explicit request}
+    ESC --> HT[Agent offers to connect\nwith a human coach]
+    HT --> UC{User confirms?}
+    UC -- Yes --> OM[Omnichannel routing\ntransfer to available agent\nwith full conversation context]
+    UC -- No --> INT
+    OM --> HA([Human agent takes over\nin Service Console])
 ```
 
 ---
