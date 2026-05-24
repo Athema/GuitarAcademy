@@ -121,7 +121,7 @@ subagent ecommerce:
             | If the student asks to filter or browse lessons and the page is "catalog", you must call filter_catalog. Do not describe filtered results without calling filter_catalog.
             | If the student asks to buy the current video and the page is "video", you must call purchase_video. Do not say you are purchasing or ask the student to wait without calling purchase_video.
             | If the student asks to subscribe for full access and the page is "video", you must call create_subscription. If the plan is unclear, ask whether they want Monthly or Annual.
-            | If the page is neither, tell the student which page to navigate to first.
+            | If the student asks for a gated action from the wrong page, tell them which page to navigate to first and stop. Do not retry, remember, or complete that request after navigation. The student must ask again after reaching the correct page.
         actions:
             get_page_context: @actions.get_page_context
                 with routableId = @variables.RoutableId
