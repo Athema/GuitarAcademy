@@ -1,11 +1,16 @@
 import { LightningElement, track, wire } from 'lwc';
+import { subscribe, unsubscribe } from 'lightning/empApi';
 import getVideos from '@salesforce/apex/GuitarVideoController.getVideos';
 import getMyAccess from '@salesforce/apex/GuitarVideoController.getMyAccess';
+
+const FILTER_CHANNEL = '/event/CatalogFilter__e';
 
 export default class GuitarVideoCatalog extends LightningElement {
     @track selectedLevel = '';
     @track selectedCategory = '';
     @track accessInfo;
+
+    _filterSubscription;
 
     @wire(getVideos, { level: '$selectedLevel', category: '$selectedCategory' })
     wiredVideos;
@@ -14,6 +19,20 @@ export default class GuitarVideoCatalog extends LightningElement {
         getMyAccess()
             .then(result => { this.accessInfo = result; })
             .catch(() => {});
+
+        subscribe(FILTER_CHANNEL, -1, event => {
+            const payload = event.data.payload;
+            this.selectedLevel    = payload.Level__c    || '';
+            this.selectedCategory = payload.Category__c || '';
+        }).then(response => {
+            this._filterSubscription = response;
+        });
+    }
+
+    disconnectedCallback() {
+        if (this._filterSubscription) {
+            unsubscribe(this._filterSubscription, () => {});
+        }
     }
 
     get videosWithAccess() {

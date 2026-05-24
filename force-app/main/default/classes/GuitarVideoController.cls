@@ -1,6 +1,6 @@
-public without sharing class GuitarVideoController {
+global without sharing class GuitarVideoController {
 
-    public class AccessInfo {
+    global class AccessInfo {
         @AuraEnabled public Boolean isSubscribed;
         @AuraEnabled public List<Id> purchasedVideoIds;
         @AuraEnabled public Date subscriptionEndDate;
@@ -12,7 +12,7 @@ public without sharing class GuitarVideoController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<Guitar_Video__c> getVideos(String level, String category) {
+    global static List<Guitar_Video__c> getVideos(String level, String category) {
         String q = 'SELECT Id, Name, YouTube_ID__c, Thumbnail_URL__c, Level__c, Category__c, Price__c, Duration_Minutes__c, Description__c FROM Guitar_Video__c';
         List<String> conditions = new List<String>();
         if (String.isNotBlank(level))    conditions.add('Level__c = \'' + String.escapeSingleQuotes(level) + '\'');
@@ -23,7 +23,7 @@ public without sharing class GuitarVideoController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<Guitar_Video__c> getFeaturedVideos() {
+    global static List<Guitar_Video__c> getFeaturedVideos() {
         return [SELECT Id, Name, YouTube_ID__c, Thumbnail_URL__c, Level__c, Category__c, Price__c, Duration_Minutes__c
                 FROM Guitar_Video__c
                 WHERE Is_Featured__c = true
@@ -32,7 +32,7 @@ public without sharing class GuitarVideoController {
     }
 
     @AuraEnabled(cacheable=false)
-    public static Boolean hasVideoAccess(Id videoId) {
+    global static Boolean hasVideoAccess(Id videoId) {
         Id contactId = getContactId();
         if (contactId == null) return false;
         if ([SELECT COUNT() FROM Video_Purchase__c WHERE Contact__c = :contactId AND Video__c = :videoId] > 0) return true;
@@ -40,7 +40,7 @@ public without sharing class GuitarVideoController {
     }
 
     @AuraEnabled(cacheable=false)
-    public static AccessInfo getMyAccess() {
+    global static AccessInfo getMyAccess() {
         Id contactId = getContactId();
         if (contactId == null) return new AccessInfo(false, new List<Id>(), null);
         List<Subscription__c> subs = [SELECT End_Date__c FROM Subscription__c WHERE Contact__c = :contactId AND Status__c = 'Active' LIMIT 1];
@@ -54,16 +54,20 @@ public without sharing class GuitarVideoController {
     }
 
     @AuraEnabled(cacheable=false)
-    public static void purchaseVideo(Id videoId) {
+    global static String purchaseVideo(Id videoId) {
         Id contactId = getContactId();
         if (contactId == null) throw new AuraHandledException('Not a community user.');
-        if ([SELECT COUNT() FROM Video_Purchase__c WHERE Contact__c = :contactId AND Video__c = :videoId] > 0) return;
-        Guitar_Video__c video = [SELECT Price__c FROM Guitar_Video__c WHERE Id = :videoId LIMIT 1];
+        if ([SELECT COUNT() FROM Video_Purchase__c WHERE Contact__c = :contactId AND Video__c = :videoId] > 0) {
+            Guitar_Video__c already = [SELECT Name FROM Guitar_Video__c WHERE Id = :videoId LIMIT 1];
+            return 'You already own "' + already.Name + '". You can watch it any time.';
+        }
+        Guitar_Video__c video = [SELECT Name, Price__c FROM Guitar_Video__c WHERE Id = :videoId LIMIT 1];
         insert new Video_Purchase__c(Contact__c = contactId, Video__c = videoId, Amount_Paid__c = video.Price__c);
+        return 'Purchase successful! "' + video.Name + '" is now unlocked. Refresh the page to watch the full lesson.';
     }
 
     @AuraEnabled(cacheable=false)
-    public static void createSubscription(String plan) {
+    global static String createSubscription(String plan) {
         Id contactId = getContactId();
         if (contactId == null) throw new AuraHandledException('Not a community user.');
         List<Subscription__c> existing = [SELECT Id FROM Subscription__c WHERE Contact__c = :contactId AND Status__c = 'Active'];
@@ -71,6 +75,18 @@ public without sharing class GuitarVideoController {
         if (!existing.isEmpty()) update existing;
         Date endDate = plan == 'Annual' ? Date.today().addYears(1) : Date.today().addMonths(1);
         insert new Subscription__c(Contact__c = contactId, Plan__c = plan, Status__c = 'Active', End_Date__c = endDate);
+        String price = plan == 'Annual' ? '$79.99/yr' : '$9.99/mo';
+        return 'Subscribed! Your ' + plan + ' plan (' + price + ') is active until ' + endDate.format() + '. All lessons are now unlocked — refresh the page to start watching.';
+    }
+
+    @AuraEnabled(cacheable=false)
+    global static String filterCatalog(String level, String category) {
+        EventBus.publish(new CatalogFilter__e(Level__c = level, Category__c = category));
+        List<String> parts = new List<String>();
+        if (String.isNotBlank(level))    parts.add(level);
+        if (String.isNotBlank(category)) parts.add(category);
+        String filterDesc = parts.isEmpty() ? 'all lessons' : String.join(parts, ' ') + ' lessons';
+        return 'Done! The catalog is now showing ' + filterDesc + '.';
     }
 
     @AuraEnabled(cacheable=false)
