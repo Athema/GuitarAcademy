@@ -20,6 +20,12 @@ global without sharing class GuitarPurchaseController {
         for (PurchaseVideoRequest req : requests) {
             PurchaseVideoResult res = new PurchaseVideoResult();
             try {
+                SessionContext context = getSessionContext(req.routableId);
+                if (context.currentPage != 'video') {
+                    res.message = 'Please navigate to a lesson video page first, then I can purchase that lesson for you.';
+                    results.add(res);
+                    continue;
+                }
                 // Resolve contactId from the passed variable (agent user ≠ student)
                 Id contactId = String.isNotBlank(req.contactId) ? (Id)req.contactId : null;
                 if (contactId == null) {
@@ -29,13 +35,7 @@ global without sharing class GuitarPurchaseController {
                 }
                 // Resolve videoId — prefer explicit param, fall back to reading session record
                 String videoIdStr = req.videoId;
-                if (String.isBlank(videoIdStr) && String.isNotBlank(req.routableId)) {
-                    List<MessagingSession> sessions = [
-                        SELECT Current_Video_Id__c FROM MessagingSession
-                        WHERE Id = :req.routableId LIMIT 1
-                    ];
-                    if (!sessions.isEmpty()) videoIdStr = sessions[0].Current_Video_Id__c;
-                }
+                if (String.isBlank(videoIdStr)) videoIdStr = context.currentVideoId;
                 if (String.isBlank(videoIdStr)) {
                     res.message = 'No video detected. Please navigate to a video page and try again.';
                     results.add(res);
@@ -57,5 +57,18 @@ global without sharing class GuitarPurchaseController {
             results.add(res);
         }
         return results;
+    }
+
+    private class SessionContext {
+        String currentPage = '';
+        String currentVideoId = '';
+    }
+
+    private static SessionContext getSessionContext(String routableId) {
+        SessionContext context = new SessionContext();
+        FilterState__c state = FilterState__c.getOrgDefaults();
+        context.currentPage = state.Current_Page__c != null ? state.Current_Page__c : '';
+        context.currentVideoId = state.Current_Video_Id__c != null ? state.Current_Video_Id__c : '';
+        return context;
     }
 }

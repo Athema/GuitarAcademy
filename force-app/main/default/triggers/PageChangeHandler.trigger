@@ -17,9 +17,11 @@ trigger PageChangeHandler on PageChange__e (after insert) {
 
     System.debug('PageChangeHandler: found ' + sessions.size() + ' session(s) by ConversationIdentifier');
 
-    List<MessagingSession> toUpdate = new List<MessagingSession>();
+    List<SObject> toUpdate = new List<SObject>();
     for (MessagingSession s : sessions) {
-        toUpdate.add(new MessagingSession(Id = s.Id, Current_Page__c = pageByConversationId.values()[0]));
+        SObject updateSession = new MessagingSession(Id = s.Id);
+        updateSession.put('Current_Page__c', pageByConversationId.values()[0]);
+        toUpdate.add(updateSession);
     }
     if (!toUpdate.isEmpty()) {
         try {

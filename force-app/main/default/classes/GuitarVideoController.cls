@@ -91,15 +91,17 @@ global without sharing class GuitarVideoController {
     @AuraEnabled(cacheable=false)
     global static Map<String, String> getAgentAction(String conversationId) {
         try {
-            List<MessagingSession> sessions = [
-                SELECT Id, Action__c, ActionJSON__c FROM MessagingSession
-                WHERE Conversation.ConversationIdentifier = :conversationId
-                LIMIT 1
-            ];
+            List<SObject> sessions = Database.query(
+                'SELECT Id, Action__c, ActionJSON__c FROM MessagingSession ' +
+                'WHERE Conversation.ConversationIdentifier = \'' + String.escapeSingleQuotes(conversationId) + '\' ' +
+                'LIMIT 1'
+            );
             Map<String, String> result = new Map<String, String>();
             if (sessions.isEmpty()) return result;
-            result.put('action', sessions[0].Action__c != null ? sessions[0].Action__c : '');
-            result.put('json',   sessions[0].ActionJSON__c != null ? sessions[0].ActionJSON__c : '');
+            Object action = sessions[0].get('Action__c');
+            Object json = sessions[0].get('ActionJSON__c');
+            result.put('action', action != null ? String.valueOf(action) : '');
+            result.put('json', json != null ? String.valueOf(json) : '');
             return result;
         } catch (Exception e) {
             return new Map<String, String>{ 'error' => e.getMessage() };
@@ -125,6 +127,12 @@ global without sharing class GuitarVideoController {
         List<FilterCatalogResult> results = new List<FilterCatalogResult>();
         for (FilterCatalogRequest req : requests) {
             FilterCatalogResult res = new FilterCatalogResult();
+            String currentPage = getSessionPage(req.inRoutableId);
+            if (currentPage != 'catalog') {
+                res.message = 'Please navigate to the catalog page first, then I can filter the lessons for you.';
+                results.add(res);
+                continue;
+            }
             Map<String, String> payload = new Map<String, String>{
                 'level'    => req.level    != null ? req.level    : '',
                 'category' => req.category != null ? req.category : ''
@@ -138,11 +146,10 @@ global without sharing class GuitarVideoController {
             if (String.isNotBlank(req.inRoutableId)) {
                 List<MessagingSession> sessions = [SELECT Id FROM MessagingSession WHERE Id = :req.inRoutableId LIMIT 1];
                 if (!sessions.isEmpty()) {
-                    update new MessagingSession(
-                        Id            = sessions[0].Id,
-                        Action__c     = 'FILTER',
-                        ActionJSON__c = JSON.serialize(payload)
-                    );
+                    SObject sessionUpdate = new MessagingSession(Id = sessions[0].Id);
+                    sessionUpdate.put('Action__c', 'FILTER');
+                    sessionUpdate.put('ActionJSON__c', JSON.serialize(payload));
+                    update sessionUpdate;
                 }
             }
             res.message = filterCatalog(req.level, req.category);
@@ -161,14 +168,16 @@ global without sharing class GuitarVideoController {
     public static void updateContactPage(String pageName, String sessionKey, String videoId) {
         if (String.isBlank(pageName) || String.isBlank(sessionKey)) return;
         try {
+            savePageState(pageName, videoId);
             List<MessagingSession> sessions = [
                 SELECT Id FROM MessagingSession
                 WHERE Conversation.ConversationIdentifier = :sessionKey
                 LIMIT 1
             ];
             if (!sessions.isEmpty()) {
-                MessagingSession ms = new MessagingSession(Id = sessions[0].Id, Current_Page__c = pageName);
-                ms.Current_Video_Id__c = String.isNotBlank(videoId) ? videoId : null;
+                SObject ms = new MessagingSession(Id = sessions[0].Id);
+                ms.put('Current_Page__c', pageName);
+                ms.put('Current_Video_Id__c', String.isNotBlank(videoId) ? videoId : null);
                 update ms;
             } else {
                 retryUpdatePage(pageName, sessionKey, videoId);
@@ -181,14 +190,16 @@ global without sharing class GuitarVideoController {
     @future
     private static void retryUpdatePage(String pageName, String sessionKey, String videoId) {
         try {
+            savePageState(pageName, videoId);
             List<MessagingSession> sessions = [
                 SELECT Id FROM MessagingSession
                 WHERE Conversation.ConversationIdentifier = :sessionKey
                 LIMIT 1
             ];
             if (!sessions.isEmpty()) {
-                MessagingSession ms = new MessagingSession(Id = sessions[0].Id, Current_Page__c = pageName);
-                ms.Current_Video_Id__c = String.isNotBlank(videoId) ? videoId : null;
+                SObject ms = new MessagingSession(Id = sessions[0].Id);
+                ms.put('Current_Page__c', pageName);
+                ms.put('Current_Video_Id__c', String.isNotBlank(videoId) ? videoId : null);
                 update ms;
             }
         } catch (Exception e) {
@@ -199,14 +210,8 @@ global without sharing class GuitarVideoController {
     @AuraEnabled(cacheable=false)
     public static String getAgentPageContext(String sessionKey) {
         try {
-            List<MessagingSession> active = [
-                SELECT Id, Current_Page__c FROM MessagingSession
-                WHERE Status = 'Active'
-                ORDER BY CreatedDate DESC
-                LIMIT 1
-            ];
-            if (active.isEmpty()) return '(no active session)';
-            return active[0].Current_Page__c != null ? active[0].Current_Page__c : '(blank)';
+            FilterState__c state = FilterState__c.getOrgDefaults();
+            return state.Current_Page__c != null ? state.Current_Page__c : '(blank)';
         } catch (Exception e) {
             return 'error: ' + e.getMessage().left(60);
         }
@@ -224,5 +229,17 @@ global without sharing class GuitarVideoController {
     private static Id getContactId() {
         List<User> users = [SELECT ContactId FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
         return (users.isEmpty() || users[0].ContactId == null) ? null : users[0].ContactId;
+    }
+
+    private static String getSessionPage(String routableId) {
+        FilterState__c state = FilterState__c.getOrgDefaults();
+        return state.Current_Page__c != null ? state.Current_Page__c : '';
+    }
+
+    private static void savePageState(String pageName, String videoId) {
+        FilterState__c state = FilterState__c.getOrgDefaults();
+        state.Current_Page__c = pageName;
+        state.Current_Video_Id__c = String.isNotBlank(videoId) ? videoId : null;
+        upsert state;
     }
 }

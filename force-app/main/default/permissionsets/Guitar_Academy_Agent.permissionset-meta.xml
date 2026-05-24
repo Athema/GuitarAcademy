@@ -9,6 +9,22 @@
         <apexClass>GuitarVideoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>GuitarPurchaseController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>GuitarSubscriptionController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>GuitarPageContextController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>GuitarDebugController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
 
     <!-- Guitar_Video__c — read all fields the agent surfaces in conversation -->
     <fieldPermissions>
@@ -68,6 +84,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>MessagingSession.Current_Page__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>MessagingSession.Current_Video_Id__c</field>
         <readable>true</readable>
     </fieldPermissions>
 

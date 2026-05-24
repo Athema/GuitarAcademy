@@ -33,12 +33,10 @@ variables:
         description: "This variable may also be referred to as VerifiedCustomerId"
     MSID: mutable string
         description: "Working copy of the MessagingSession Id, refreshed on every message"
-    MyMS: mutable object
-        description: "Live snapshot of the MessagingSession record — refreshed each turn. Access fields via @variables.MyMS.Current_Page__c etc."
     currentPage: mutable string
-        description: "Current page the student is on: home, catalog, or video. Extracted from MyMS each turn."
+        description: "Current page the student is on: home, catalog, or video. Refreshed from MessagingSession before ecommerce reasoning."
     currentVideoId: mutable string
-        description: "Guitar_Video__c Id of the video the student is watching. Extracted from MyMS each turn."
+        description: "Guitar_Video__c Id of the video the student is watching. Refreshed from MessagingSession before ecommerce reasoning."
 
 knowledge:
     rag_feature_config_id: ""
@@ -50,14 +48,6 @@ start_agent agent_router:
     description: "Welcome the user and determine the appropriate subagent based on user input"
     reasoning:
         instructions: ->
-            | set @variables.MSID = @variables.RoutableId
-            | run @actions.get_session
-            |     with inRoutableId = @variables.MSID
-            |     set @variables.MyMS = @outputs.MessagingSession.data
-            |     set @variables.MSID = @outputs.MessagingSession.data.Id
-            |     set @variables.currentPage = @outputs.MessagingSession.data.Current_Page__c
-            |     set @variables.currentVideoId = @outputs.MessagingSession.data.Current_Video_Id__c
-            |
             | Select the best tool to call based on conversation history and user's intent.
             | If the user asks to speak with a human agent or be transferred, call {!@actions.go_to_escalation}.
             | If the user wants to filter videos, browse the catalog, purchase a video, or manage a subscription, transition to ecommerce using go_to_ecommerce.
@@ -119,13 +109,22 @@ subagent escalation:
 subagent ecommerce:
     label: "Ecommerce"
     description: "Helps students browse the video catalog, filter videos, purchase individual videos, and manage subscriptions."
+    before_reasoning:
+        run @actions.get_page_context
+            with routableId = @variables.RoutableId
+            set @variables.currentPage = @outputs.currentPage
+            set @variables.currentVideoId = @outputs.currentVideoId
     reasoning:
         instructions: ->
             | You know the student's current page from @variables.currentPage.
-            | If the student asks to filter or browse lessons and the page is "catalog", call filter_catalog.
-            | If the student asks to buy the current video and the page is "video", call purchase_video.
+            | Never tell the student that a filter, purchase, or subscription has been completed unless you have called the matching action and received its result message.
+            | If the student asks to filter or browse lessons and the page is "catalog", you must call filter_catalog. Do not describe filtered results without calling filter_catalog.
+            | If the student asks to buy the current video and the page is "video", you must call purchase_video. Do not say you are purchasing or ask the student to wait without calling purchase_video.
+            | If the student asks to subscribe for full access and the page is "video", you must call create_subscription. If the plan is unclear, ask whether they want Monthly or Annual.
             | If the page is neither, tell the student which page to navigate to first.
         actions:
+            get_page_context: @actions.get_page_context
+                with routableId = @variables.RoutableId
             filter_catalog: @actions.filter_catalog
                 available when @variables.currentPage == "catalog"
                 with level = ...
@@ -136,11 +135,16 @@ subagent ecommerce:
                 with videoId = @variables.currentVideoId
                 with contactId = @variables.ContactId
                 with routableId = @variables.RoutableId
+            create_subscription: @actions.create_subscription
+                available when @variables.currentPage == "video"
+                with plan = ...
+                with contactId = @variables.ContactId
+                with routableId = @variables.RoutableId
 
     actions:
         filter_catalog:
             label: "Filter Video Catalog"
-            description: "Filters the video catalog by skill level and/or category. Only call when currentPage is catalog."
+            description: "Actually applies the visible catalog filters on the page. This is the only action that changes the catalog UI. Only call when currentPage is catalog."
             target: "apex://GuitarVideoController"
             inputs:
                 level: string
@@ -163,12 +167,12 @@ subagent ecommerce:
                     filter_from_agent: False
         purchase_video:
             label: "Purchase Video"
-            description: "Purchases the video the student is currently watching. Only call when currentPage is video."
+            description: "Actually purchases the video the student is currently watching. This is the only action that creates the purchase record. Only call when currentPage is video."
             target: "apex://GuitarPurchaseController"
             inputs:
                 videoId: string
                     label: "Video Id"
-                    description: "The Guitar_Video__c record Id — pass @variables.MyMS.Current_Video_Id__c"
+                    description: "The Guitar_Video__c record Id — pass @variables.currentVideoId"
                     is_required: False
                 contactId: string
                     label: "Contact Id"
@@ -184,6 +188,54 @@ subagent ecommerce:
                     description: "Purchase confirmation or error"
                     is_displayable: True
                     filter_from_agent: False
+        create_subscription:
+            label: "Create Subscription"
+            description: "Actually subscribes the student to full access. This is the only action that creates the subscription record. Only call when currentPage is video."
+            target: "apex://GuitarSubscriptionController"
+            inputs:
+                plan: string
+                    label: "Plan"
+                    description: "Subscription plan: Monthly or Annual"
+                    is_required: True
+                contactId: string
+                    label: "Contact Id"
+                    description: "The student Contact Id — pass @variables.ContactId"
+                    is_required: True
+                routableId: string
+                    label: "Routable Id"
+                    description: "The MessagingSession Id — pass @variables.RoutableId"
+                    is_required: False
+            outputs:
+                message: string
+                    label: "Result Message"
+                    description: "Subscription confirmation or error"
+                    is_displayable: True
+                    filter_from_agent: False
+        get_page_context:
+            label: "Get Page Context"
+            description: "Fetches the current page and video from the active MessagingSession."
+            target: "apex://GuitarPageContextController"
+            inputs:
+                routableId: string
+                    label: "Routable Id"
+                    description: "The active MessagingSession Id — always pass @variables.RoutableId"
+                    is_required: True
+            outputs:
+                currentPage: string
+                    label: "Current Page"
+                    description: "Current page name: home, catalog, video, or blank"
+                    is_displayable: False
+                    filter_from_agent: True
+                currentVideoId: string
+                    label: "Current Video Id"
+                    description: "Current Guitar_Video__c Id when the page is video"
+                    is_displayable: False
+                    filter_from_agent: True
+                message: string
+                    label: "Context Message"
+                    description: "Context load result"
+                    is_displayable: False
+                    filter_from_agent: True
 
 connection messaging:
     outbound_route_type: "OmniChannelFlow"
