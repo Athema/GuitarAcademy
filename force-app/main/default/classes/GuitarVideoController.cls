@@ -95,6 +95,15 @@ global without sharing class GuitarVideoController {
         delete [SELECT Id FROM Subscription__c];
     }
 
+    @AuraEnabled(cacheable=false)
+    public static void updateSessionPage(String sessionId, String pageName) {
+        if (String.isBlank(sessionId) || String.isBlank(pageName)) return;
+        update new MessagingSession(
+            Id = sessionId,
+            Current_Page__c = pageName
+        );
+    }
+
     private static Id getContactId() {
         List<User> users = [SELECT ContactId FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
         return (users.isEmpty() || users[0].ContactId == null) ? null : users[0].ContactId;

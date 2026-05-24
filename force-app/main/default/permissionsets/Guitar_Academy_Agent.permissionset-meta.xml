@@ -64,6 +64,13 @@
         <readable>true</readable>
     </fieldPermissions>
 
+    <!-- MessagingSession.Current_Page__c — agent reads current page for available when guards -->
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>MessagingSession.Current_Page__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <!-- Video_Purchase__c — read + create -->
     <fieldPermissions>
         <editable>true</editable>
