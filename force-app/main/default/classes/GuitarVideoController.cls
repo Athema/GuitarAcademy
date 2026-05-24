@@ -80,6 +80,16 @@ global without sharing class GuitarVideoController {
     }
 
     @AuraEnabled(cacheable=false)
+    global static String filterCatalog(String level, String category) {
+        EventBus.publish(new CatalogFilter__e(Level__c = level, Category__c = category));
+        List<String> parts = new List<String>();
+        if (String.isNotBlank(level))    parts.add(level);
+        if (String.isNotBlank(category)) parts.add(category);
+        String filterDesc = parts.isEmpty() ? 'all lessons' : String.join(parts, ' ') + ' lessons';
+        return 'Done! The catalog is now showing ' + filterDesc + '.';
+    }
+
+    @AuraEnabled(cacheable=false)
     public static void resetDemo() {
         delete [SELECT Id FROM Video_Purchase__c];
         delete [SELECT Id FROM Subscription__c];
