@@ -81,12 +81,74 @@ global without sharing class GuitarVideoController {
 
     @AuraEnabled(cacheable=false)
     global static String filterCatalog(String level, String category) {
-        EventBus.publish(new CatalogFilter__e(Level__c = level, Category__c = category));
         List<String> parts = new List<String>();
         if (String.isNotBlank(level))    parts.add(level);
         if (String.isNotBlank(category)) parts.add(category);
         String filterDesc = parts.isEmpty() ? 'all lessons' : String.join(parts, ' ') + ' lessons';
         return 'Done! The catalog is now showing ' + filterDesc + '.';
+    }
+
+    @AuraEnabled(cacheable=false)
+    global static Map<String, String> getAgentAction(String conversationId) {
+        try {
+            List<MessagingSession> sessions = [
+                SELECT Id, Action__c, ActionJSON__c FROM MessagingSession
+                WHERE Conversation.ConversationIdentifier = :conversationId
+                LIMIT 1
+            ];
+            Map<String, String> result = new Map<String, String>();
+            if (sessions.isEmpty()) return result;
+            result.put('action', sessions[0].Action__c != null ? sessions[0].Action__c : '');
+            result.put('json',   sessions[0].ActionJSON__c != null ? sessions[0].ActionJSON__c : '');
+            return result;
+        } catch (Exception e) {
+            return new Map<String, String>{ 'error' => e.getMessage() };
+        }
+    }
+
+    public class FilterCatalogRequest {
+        @InvocableVariable(label='Level' description='Skill level: Beginner, Intermediate, or Advanced')
+        public String level;
+        @InvocableVariable(label='Category' description='Category e.g. Blues, Rock, Classical')
+        public String category;
+        @InvocableVariable(label='Messaging Session Id' description='Pass @variables.RoutableId from the agent context')
+        public String inRoutableId;
+    }
+
+    public class FilterCatalogResult {
+        @InvocableVariable(label='Result Message')
+        public String message;
+    }
+
+    @InvocableMethod(label='Filter Video Catalog' description='Filters the Guitar Academy video catalog by skill level and/or category. Only call when the student is on the Catalog page.')
+    public static List<FilterCatalogResult> filterCatalogInvocable(List<FilterCatalogRequest> requests) {
+        List<FilterCatalogResult> results = new List<FilterCatalogResult>();
+        for (FilterCatalogRequest req : requests) {
+            FilterCatalogResult res = new FilterCatalogResult();
+            Map<String, String> payload = new Map<String, String>{
+                'level'    => req.level    != null ? req.level    : '',
+                'category' => req.category != null ? req.category : ''
+            };
+            // Write to FilterState__c for polling-based catalog update
+            FilterState__c state = FilterState__c.getOrgDefaults();
+            state.Level__c    = req.level;
+            state.Category__c = req.category;
+            upsert state;
+            // Also write to MessagingSession for event-driven approach
+            if (String.isNotBlank(req.inRoutableId)) {
+                List<MessagingSession> sessions = [SELECT Id FROM MessagingSession WHERE Id = :req.inRoutableId LIMIT 1];
+                if (!sessions.isEmpty()) {
+                    update new MessagingSession(
+                        Id            = sessions[0].Id,
+                        Action__c     = 'FILTER',
+                        ActionJSON__c = JSON.serialize(payload)
+                    );
+                }
+            }
+            res.message = filterCatalog(req.level, req.category);
+            results.add(res);
+        }
+        return results;
     }
 
     @AuraEnabled(cacheable=false)
@@ -96,12 +158,67 @@ global without sharing class GuitarVideoController {
     }
 
     @AuraEnabled(cacheable=false)
-    public static void updateSessionPage(String sessionId, String pageName) {
-        if (String.isBlank(sessionId) || String.isBlank(pageName)) return;
-        update new MessagingSession(
-            Id = sessionId,
-            Current_Page__c = pageName
-        );
+    public static void updateContactPage(String pageName, String sessionKey, String videoId) {
+        if (String.isBlank(pageName) || String.isBlank(sessionKey)) return;
+        try {
+            List<MessagingSession> sessions = [
+                SELECT Id FROM MessagingSession
+                WHERE Conversation.ConversationIdentifier = :sessionKey
+                LIMIT 1
+            ];
+            if (!sessions.isEmpty()) {
+                MessagingSession ms = new MessagingSession(Id = sessions[0].Id, Current_Page__c = pageName);
+                ms.Current_Video_Id__c = String.isNotBlank(videoId) ? videoId : null;
+                update ms;
+            } else {
+                retryUpdatePage(pageName, sessionKey, videoId);
+            }
+        } catch (Exception e) {
+            System.debug('updateContactPage error: ' + e.getMessage());
+        }
+    }
+
+    @future
+    private static void retryUpdatePage(String pageName, String sessionKey, String videoId) {
+        try {
+            List<MessagingSession> sessions = [
+                SELECT Id FROM MessagingSession
+                WHERE Conversation.ConversationIdentifier = :sessionKey
+                LIMIT 1
+            ];
+            if (!sessions.isEmpty()) {
+                MessagingSession ms = new MessagingSession(Id = sessions[0].Id, Current_Page__c = pageName);
+                ms.Current_Video_Id__c = String.isNotBlank(videoId) ? videoId : null;
+                update ms;
+            }
+        } catch (Exception e) {
+            System.debug('retryUpdatePage error: ' + e.getMessage());
+        }
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static String getAgentPageContext(String sessionKey) {
+        try {
+            List<MessagingSession> active = [
+                SELECT Id, Current_Page__c FROM MessagingSession
+                WHERE Status = 'Active'
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+            if (active.isEmpty()) return '(no active session)';
+            return active[0].Current_Page__c != null ? active[0].Current_Page__c : '(blank)';
+        } catch (Exception e) {
+            return 'error: ' + e.getMessage().left(60);
+        }
+    }
+
+    @AuraEnabled(cacheable=false)
+    global static Map<String, String> getFilterSettings() {
+        FilterState__c state = FilterState__c.getOrgDefaults();
+        Map<String, String> result = new Map<String, String>();
+        result.put('level',    state.Level__c    != null ? state.Level__c    : '');
+        result.put('category', state.Category__c != null ? state.Category__c : '');
+        return result;
     }
 
     private static Id getContactId() {
