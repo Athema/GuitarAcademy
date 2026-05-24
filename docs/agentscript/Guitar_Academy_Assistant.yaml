@@ -33,10 +33,12 @@ variables:
         description: "This variable may also be referred to as VerifiedCustomerId"
     MSID: mutable string
         description: "Working copy of the MessagingSession Id, refreshed on every message"
+    MyMS: mutable object
+        description: "Live snapshot of the MessagingSession record — refreshed each turn. Access fields via @variables.MyMS.Current_Page__c etc."
     currentPage: mutable string
-        description: "The page the student is on: home, catalog, or video. Refreshed on every message."
+        description: "Current page the student is on: home, catalog, or video. Extracted from MyMS each turn."
     currentVideoId: mutable string
-        description: "The Guitar_Video__c Id of the video the student is currently watching."
+        description: "Guitar_Video__c Id of the video the student is watching. Extracted from MyMS each turn."
 
 knowledge:
     rag_feature_config_id: ""
@@ -51,8 +53,10 @@ start_agent agent_router:
             | set @variables.MSID = @variables.RoutableId
             | run @actions.get_session
             |     with inRoutableId = @variables.MSID
-            |     set @variables.currentPage = @outputs.CurrentPage
-            |     set @variables.currentVideoId = @outputs.CurrentVideoId
+            |     set @variables.MyMS = @outputs.MessagingSession.data
+            |     set @variables.MSID = @outputs.MessagingSession.data.Id
+            |     set @variables.currentPage = @outputs.MessagingSession.data.Current_Page__c
+            |     set @variables.currentVideoId = @outputs.MessagingSession.data.Current_Video_Id__c
             |
             | Select the best tool to call based on conversation history and user's intent.
             | If the user asks to speak with a human agent or be transferred, call {!@actions.go_to_escalation}.
@@ -73,7 +77,7 @@ start_agent agent_router:
     actions:
         get_session:
             label: "Get Messaging Session"
-            description: "Fetches the MessagingSession record to refresh currentPage and currentVideoId on every message."
+            description: "Fetches the MessagingSession record to refresh MyMS on every message."
             target: "flow://Get_Messaging_Session"
             inputs:
                 inRoutableId: string
@@ -81,12 +85,10 @@ start_agent agent_router:
                     description: "The MessagingSession Id — always pass @variables.RoutableId"
                     is_required: True
             outputs:
-                CurrentPage: string
-                    label: "Current Page"
-                    description: "Value of MessagingSession.Current_Page__c"
-                CurrentVideoId: string
-                    label: "Current Video Id"
-                    description: "Value of MessagingSession.Current_Video_Id__c"
+                MessagingSession: object
+                    label: "Messaging Session Record"
+                    description: "Full MessagingSession record — access via @outputs.MessagingSession.data.FieldName"
+                    complex_data_type_name: "lightning__recordInfoType"
 
 subagent off_topic:
     label: "Off Topic"
@@ -119,21 +121,11 @@ subagent ecommerce:
     description: "Helps students browse the video catalog, filter videos, purchase individual videos, and manage subscriptions."
     reasoning:
         instructions: ->
-            | run @actions.debug_context
-            |     with currentPage = @variables.currentPage
-            |     with currentVideoId = @variables.currentVideoId
-            |     with contactId = @variables.ContactId
-            |     with routableId = @variables.RoutableId
-            |
-            | Review the debug output above. If currentPage is "catalog", call filter_catalog.
-            | If currentPage is "video", call purchase_video.
-            | If currentPage is neither, tell the student which page to navigate to.
-         actions:
-            debug_context: @actions.debug_context
-                with currentPage = @variables.currentPage
-                with currentVideoId = @variables.currentVideoId
-                with contactId = @variables.ContactId
-                with routableId = @variables.RoutableId
+            | You know the student's current page from @variables.currentPage.
+            | If the student asks to filter or browse lessons and the page is "catalog", call filter_catalog.
+            | If the student asks to buy the current video and the page is "video", call purchase_video.
+            | If the page is neither, tell the student which page to navigate to first.
+        actions:
             filter_catalog: @actions.filter_catalog
                 available when @variables.currentPage == "catalog"
                 with level = ...
@@ -143,35 +135,9 @@ subagent ecommerce:
                 available when @variables.currentPage == "video"
                 with videoId = @variables.currentVideoId
                 with contactId = @variables.ContactId
+                with routableId = @variables.RoutableId
 
     actions:
-        debug_context:
-            label: "Debug Agent Context"
-            description: "Returns the current values of agent variables for debugging. Always call this first."
-            target: "apex://GuitarDebugController"
-            inputs:
-                currentPage: string
-                    label: "Current Page"
-                    description: "Pass @variables.currentPage"
-                    is_required: False
-                currentVideoId: string
-                    label: "Current Video Id"
-                    description: "Pass @variables.currentVideoId"
-                    is_required: False
-                contactId: string
-                    label: "Contact Id"
-                    description: "Pass @variables.ContactId"
-                    is_required: False
-                routableId: string
-                    label: "Routable Id"
-                    description: "Pass @variables.RoutableId"
-                    is_required: False
-            outputs:
-                message: string
-                    label: "Debug Output"
-                    description: "Variable values from the agent context"
-                    is_displayable: True
-                    filter_from_agent: False
         filter_catalog:
             label: "Filter Video Catalog"
             description: "Filters the video catalog by skill level and/or category. Only call when currentPage is catalog."
@@ -202,12 +168,16 @@ subagent ecommerce:
             inputs:
                 videoId: string
                     label: "Video Id"
-                    description: "The Guitar_Video__c record Id — pass @variables.currentVideoId"
-                    is_required: True
+                    description: "The Guitar_Video__c record Id — pass @variables.MyMS.Current_Video_Id__c"
+                    is_required: False
                 contactId: string
                     label: "Contact Id"
                     description: "The student Contact Id — pass @variables.ContactId"
                     is_required: True
+                routableId: string
+                    label: "Routable Id"
+                    description: "The MessagingSession Id — pass @variables.RoutableId"
+                    is_required: False
             outputs:
                 message: string
                     label: "Result Message"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>62.0</apiVersion>
-    <description>Fetches the MessagingSession record by Id and returns individual fields as outputs so the Agent Router can refresh context variables on every message.</description>
+    <description>Fetches the MessagingSession record by Id and returns it as a record output so the Agent Router can read any field via dot notation.</description>
     <label>Get Messaging Session</label>
     <interviewLabel>Get Messaging Session {!$Flow.CurrentDateTime}</interviewLabel>
     <processType>AutoLaunchedFlow</processType>
@@ -16,20 +16,13 @@
         <description>The MessagingSession record Id</description>
     </variables>
     <variables>
-        <name>CurrentPage</name>
-        <dataType>String</dataType>
+        <name>MessagingSession</name>
+        <dataType>SObject</dataType>
         <isCollection>false</isCollection>
         <isInput>false</isInput>
         <isOutput>true</isOutput>
-        <description>Value of MessagingSession.Current_Page__c</description>
-    </variables>
-    <variables>
-        <name>CurrentVideoId</name>
-        <dataType>String</dataType>
-        <isCollection>false</isCollection>
-        <isInput>false</isInput>
-        <isOutput>true</isOutput>
-        <description>Value of MessagingSession.Current_Video_Id__c</description>
+        <objectType>MessagingSession</objectType>
+        <description>The full MessagingSession record — agent accesses fields via @outputs.MessagingSession.data.FieldName</description>
     </variables>
     <start>
         <locationX>176</locationX>
@@ -43,7 +36,7 @@
         <label>Get Messaging Session</label>
         <locationX>176</locationX>
         <locationY>168</locationY>
-        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Id</field>
@@ -54,13 +47,10 @@
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
         <object>MessagingSession</object>
-        <outputAssignments>
-            <assignToReference>CurrentPage</assignToReference>
-            <field>Current_Page__c</field>
-        </outputAssignments>
-        <outputAssignments>
-            <assignToReference>CurrentVideoId</assignToReference>
-            <field>Current_Video_Id__c</field>
-        </outputAssignments>
+        <outputReference>MessagingSession</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Current_Page__c</queriedFields>
+        <queriedFields>Current_Video_Id__c</queriedFields>
+        <storeOutputAutomatically>false</storeOutputAutomatically>
     </recordLookups>
 </Flow>

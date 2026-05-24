@@ -22,27 +22,28 @@ export default class GuitarVideoCatalog extends LightningElement {
             .then(result => { this.accessInfo = result; })
             .catch(() => {});
 
+        // Persist conversationId across LWR navigation (component is recreated on each page)
+        this._conversationId = localStorage.getItem('ga_conversationId') || null;
+
         this._openHandler = (event) => {
             this._conversationId = event.detail?.conversationId || null;
+            if (this._conversationId) localStorage.setItem('ga_conversationId', this._conversationId);
         };
 
-        // Per slide: only process agent messages (they carry conversationEntry; user messages don't)
-        this._messageHandler = (event) => {
-            if (!event.detail?.conversationEntry) return;
-            if (!this._conversationId) return;
-            getAgentAction({ conversationId: this._conversationId })
-                .then(result => {
-                    if (result?.action === 'FILTER') {
-                        const payload = JSON.parse(result.json || '{}');
-                        this.selectedLevel    = payload.level    || '';
-                        this.selectedCategory = payload.category || '';
-                    }
-                })
-                .catch(() => {});
-        };
-
-        // Polling fallback: catches cases where event timing is off
-        this._filterPoll = setInterval(() => {
+        this._applyFilter = () => {
+            const convId = this._conversationId || localStorage.getItem('ga_conversationId');
+            if (convId) {
+                getAgentAction({ conversationId: convId })
+                    .then(result => {
+                        if (result?.action === 'FILTER') {
+                            const payload = JSON.parse(result.json || '{}');
+                            this.selectedLevel    = payload.level    || '';
+                            this.selectedCategory = payload.category || '';
+                        }
+                    })
+                    .catch(() => {});
+            }
+            // Always also poll FilterState__c as a belt-and-suspenders fallback
             getFilterSettings()
                 .then(result => {
                     if (!result) return;
@@ -54,7 +55,16 @@ export default class GuitarVideoCatalog extends LightningElement {
                     }
                 })
                 .catch(() => {});
-        }, 2000);
+        };
+
+        // Trigger immediately on agent messages (only agent messages carry conversationEntry)
+        this._messageHandler = (event) => {
+            if (!event.detail?.conversationEntry) return;
+            this._applyFilter();
+        };
+
+        // Poll every 2 s as fallback (covers timing gaps and page-load state)
+        this._filterPoll = setInterval(this._applyFilter, 2000);
 
         window.addEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
         window.addEventListener('onEmbeddedMessageSent', this._messageHandler);
