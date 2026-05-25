@@ -162,13 +162,20 @@ global without sharing class GuitarVideoController {
     public static void resetDemo() {
         delete [SELECT Id FROM Video_Purchase__c];
         delete [SELECT Id FROM Subscription__c];
+        FilterState__c state = FilterState__c.getOrgDefaults();
+        state.Level__c = null;
+        state.Category__c = null;
+        state.Action__c = null;
+        state.Action_Video_Id__c = null;
+        upsert state;
     }
 
     @AuraEnabled(cacheable=false)
     public static void updateContactPage(String pageName, String sessionKey, String videoId) {
-        if (String.isBlank(pageName) || String.isBlank(sessionKey)) return;
+        if (String.isBlank(pageName)) return;
         try {
             savePageState(pageName, videoId);
+            if (String.isBlank(sessionKey)) return;
             List<MessagingSession> sessions = [
                 SELECT Id FROM MessagingSession
                 WHERE Conversation.ConversationIdentifier = :sessionKey
@@ -223,6 +230,8 @@ global without sharing class GuitarVideoController {
         Map<String, String> result = new Map<String, String>();
         result.put('level',    state.Level__c    != null ? state.Level__c    : '');
         result.put('category', state.Category__c != null ? state.Category__c : '');
+        result.put('action', state.Action__c != null ? state.Action__c : '');
+        result.put('actionVideoId', state.Action_Video_Id__c != null ? state.Action_Video_Id__c : '');
         return result;
     }
 
@@ -240,6 +249,16 @@ global without sharing class GuitarVideoController {
         FilterState__c state = FilterState__c.getOrgDefaults();
         state.Current_Page__c = pageName;
         state.Current_Video_Id__c = String.isNotBlank(videoId) ? videoId : null;
+        if (pageName == 'catalog') {
+            state.Level__c = null;
+            state.Category__c = null;
+        }
+        if (pageName != 'video') {
+            state.Action__c = null;
+            state.Action_Video_Id__c = null;
+        }
+        Id contactId = getContactId();
+        state.Current_Contact_Id__c = contactId != null ? String.valueOf(contactId) : null;
         upsert state;
     }
 }

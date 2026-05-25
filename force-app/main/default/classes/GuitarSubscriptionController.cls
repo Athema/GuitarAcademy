@@ -20,13 +20,9 @@ global without sharing class GuitarSubscriptionController {
         for (SubscriptionRequest req : requests) {
             SubscriptionResult res = new SubscriptionResult();
             try {
-                if (getSessionPage(req.routableId) != 'video') {
-                    res.message = 'Please navigate to a lesson video page first, then I can set up full lesson access for you.';
-                    results.add(res);
-                    continue;
-                }
-
-                Id contactId = String.isNotBlank(req.contactId) ? (Id)req.contactId : null;
+                FilterState__c state = FilterState__c.getOrgDefaults();
+                String contactIdStr = String.isNotBlank(req.contactId) ? req.contactId : state.Current_Contact_Id__c;
+                Id contactId = String.isNotBlank(contactIdStr) ? (Id)contactIdStr : null;
                 if (contactId == null) {
                     res.message = 'Could not identify your account. Please try again.';
                     results.add(res);
@@ -57,9 +53,10 @@ global without sharing class GuitarSubscriptionController {
                     Status__c = 'Active',
                     End_Date__c = endDate
                 );
+                publishAccessAction();
 
                 String price = plan == 'Annual' ? '$79.99/yr' : '$9.99/mo';
-                res.message = 'Subscribed! Your ' + plan + ' plan (' + price + ') is active until ' + endDate.format() + '. All lessons are now unlocked. Refresh the page to start watching.';
+                res.message = 'Subscribed! Your ' + plan + ' plan (' + price + ') is active until ' + endDate.format() + '. All lessons are now unlocked.';
             } catch (Exception e) {
                 res.message = 'Something went wrong: ' + e.getMessage().left(100);
             }
@@ -76,8 +73,14 @@ global without sharing class GuitarSubscriptionController {
         return '';
     }
 
-    private static String getSessionPage(String routableId) {
-        FilterState__c state = FilterState__c.getOrgDefaults();
+    private static String getSessionPage(FilterState__c state) {
         return state.Current_Page__c != null ? state.Current_Page__c : '';
+    }
+
+    private static void publishAccessAction() {
+        FilterState__c state = FilterState__c.getOrgDefaults();
+        state.Action__c = 'SUBSCRIBE';
+        state.Action_Video_Id__c = null;
+        upsert state;
     }
 }

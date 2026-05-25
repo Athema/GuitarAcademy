@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
     <customSettingsType>Hierarchy</customSettingsType>
-    <description>Stores the current catalog filter state so LWCs can poll it.</description>
+    <description>Stores current page, video, contact, and catalog filter state so LWCs and agent actions can share session context.</description>
     <enableFeeds>false</enableFeeds>
-    <label>Filter State</label>
+    <label>Session State</label>
     <visibility>Public</visibility>
 </CustomObject>

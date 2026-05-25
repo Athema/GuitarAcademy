@@ -5,6 +5,7 @@ import updateContactPage from '@salesforce/apex/GuitarVideoController.updateCont
 const CONV_KEY = 'ga_conversationId';
 
 function resolvePage(pageRef) {
+    if (getVideoIdFromUrl()) return 'video';
     const type = pageRef.type || '';
     const attrs = pageRef.attributes || {};
     if (type === 'comm__namedPage') {
@@ -18,12 +19,19 @@ function resolvePage(pageRef) {
 }
 
 function getVideoId(pageRef) {
+    const urlVideoId = getVideoIdFromUrl();
+    if (urlVideoId) return urlVideoId;
     const type = pageRef.type || '';
     const attrs = pageRef.attributes || {};
     if (type === 'standard__recordPage' && attrs.objectApiName === 'Guitar_Video__c') {
         return attrs.recordId || null;
     }
     return null;
+}
+
+function getVideoIdFromUrl() {
+    const match = window.location.pathname.match(/\/guitar-video\/([^/?#]+)/i);
+    return match ? decodeURIComponent(match[1]) : null;
 }
 
 export default class GuitarPageTracker extends LightningElement {

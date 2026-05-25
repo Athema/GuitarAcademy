@@ -118,10 +118,15 @@ subagent ecommerce:
         instructions: ->
             | You know the student's current page from @variables.currentPage.
             | Never tell the student that a filter, purchase, or subscription has been completed unless you have called the matching action and received its result message.
+            | Catalog page is only for filtering, browsing, and choosing a lesson. Never tell the student they must be on the catalog page to purchase.
+            | Video page is required for purchase actions because purchase must identify the current lesson.
+            | Subscription is account-wide and can be created from any page: home, catalog, or video.
+            | If @variables.currentVideoId is not blank, treat the student as being on a specific lesson video page for purchase decisions, even if @variables.currentPage is still catching up.
             | If the student asks to filter or browse lessons and the page is "catalog", you must call filter_catalog. Do not describe filtered results without calling filter_catalog.
-            | If the student asks to buy the current video and the page is "video", you must call purchase_video. Do not say you are purchasing or ask the student to wait without calling purchase_video.
-            | If the student asks to subscribe for full access and the page is "video", you must call create_subscription. If the plan is unclear, ask whether they want Monthly or Annual.
-            | If the student asks for a gated action from the wrong page, tell them which page to navigate to first and stop. Do not retry, remember, or complete that request after navigation. The student must ask again after reaching the correct page.
+            | If the student asks to buy, purchase, unlock, or get access to the current lesson/video/song and either the page is "video" or @variables.currentVideoId is not blank, you must call purchase_video immediately. This includes follow-ups like "do it", "yes", "this one", "purchase this one", and "I am there" when the recent conversation is about purchase. Do not ask them to confirm the page again.
+            | If the student asks to buy, purchase, unlock, or get access and the page is not "video" and @variables.currentVideoId is blank, tell them to open the specific lesson's video page, then ask again. Stop after that response.
+            | If the student asks to subscribe for full access from any page, call create_subscription. If the plan is unclear, ask whether they want Monthly or Annual.
+            | If the student asks for any gated action from the wrong page, tell them which page to navigate to first and stop. Do not retry, remember, or complete that request after navigation. The student must ask again after reaching the correct page.
         actions:
             get_page_context: @actions.get_page_context
                 with routableId = @variables.RoutableId
@@ -131,12 +136,11 @@ subagent ecommerce:
                 with category = ...
                 with inRoutableId = @variables.RoutableId
             purchase_video: @actions.purchase_video
-                available when @variables.currentPage == "video"
+                available when @variables.currentPage == "video" || @variables.currentVideoId != ""
                 with videoId = @variables.currentVideoId
                 with contactId = @variables.ContactId
                 with routableId = @variables.RoutableId
             create_subscription: @actions.create_subscription
-                available when @variables.currentPage == "video"
                 with plan = ...
                 with contactId = @variables.ContactId
                 with routableId = @variables.RoutableId
@@ -190,7 +194,7 @@ subagent ecommerce:
                     filter_from_agent: False
         create_subscription:
             label: "Create Subscription"
-            description: "Actually subscribes the student to full access. This is the only action that creates the subscription record. Only call when currentPage is video."
+            description: "Actually subscribes the student to full access. This is the only action that creates the subscription record. Can be called from home, catalog, or video pages."
             target: "apex://GuitarSubscriptionController"
             inputs:
                 plan: string

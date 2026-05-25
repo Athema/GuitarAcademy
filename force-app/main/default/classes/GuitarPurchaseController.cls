@@ -21,13 +21,9 @@ global without sharing class GuitarPurchaseController {
             PurchaseVideoResult res = new PurchaseVideoResult();
             try {
                 SessionContext context = getSessionContext(req.routableId);
-                if (context.currentPage != 'video') {
-                    res.message = 'Please navigate to a lesson video page first, then I can purchase that lesson for you.';
-                    results.add(res);
-                    continue;
-                }
                 // Resolve contactId from the passed variable (agent user ≠ student)
-                Id contactId = String.isNotBlank(req.contactId) ? (Id)req.contactId : null;
+                String contactIdStr = String.isNotBlank(req.contactId) ? req.contactId : context.currentContactId;
+                Id contactId = String.isNotBlank(contactIdStr) ? (Id)contactIdStr : null;
                 if (contactId == null) {
                     res.message = 'Could not identify your account. Please try again.';
                     results.add(res);
@@ -50,7 +46,8 @@ global without sharing class GuitarPurchaseController {
                 }
                 Guitar_Video__c video = [SELECT Name, Price__c FROM Guitar_Video__c WHERE Id = :videoId LIMIT 1];
                 insert new Video_Purchase__c(Contact__c = contactId, Video__c = videoId, Amount_Paid__c = video.Price__c);
-                res.message = 'Purchase successful! "' + video.Name + '" is now unlocked. Refresh the page to watch the full lesson.';
+                publishAccessAction('PURCHASE', String.valueOf(videoId));
+                res.message = 'Purchase successful! "' + video.Name + '" is now unlocked. You can play the full lesson now.';
             } catch (Exception e) {
                 res.message = 'Something went wrong: ' + e.getMessage().left(100);
             }
@@ -62,6 +59,7 @@ global without sharing class GuitarPurchaseController {
     private class SessionContext {
         String currentPage = '';
         String currentVideoId = '';
+        String currentContactId = '';
     }
 
     private static SessionContext getSessionContext(String routableId) {
@@ -69,6 +67,14 @@ global without sharing class GuitarPurchaseController {
         FilterState__c state = FilterState__c.getOrgDefaults();
         context.currentPage = state.Current_Page__c != null ? state.Current_Page__c : '';
         context.currentVideoId = state.Current_Video_Id__c != null ? state.Current_Video_Id__c : '';
+        context.currentContactId = state.Current_Contact_Id__c != null ? state.Current_Contact_Id__c : '';
         return context;
+    }
+
+    private static void publishAccessAction(String action, String videoId) {
+        FilterState__c state = FilterState__c.getOrgDefaults();
+        state.Action__c = action;
+        state.Action_Video_Id__c = videoId;
+        upsert state;
     }
 }

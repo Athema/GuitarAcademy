@@ -1,7 +1,6 @@
 import { LightningElement, track, wire } from 'lwc';
 import getVideos from '@salesforce/apex/GuitarVideoController.getVideos';
 import getMyAccess from '@salesforce/apex/GuitarVideoController.getMyAccess';
-import getAgentAction from '@salesforce/apex/GuitarVideoController.getAgentAction';
 import getFilterSettings from '@salesforce/apex/GuitarVideoController.getFilterSettings';
 
 export default class GuitarVideoCatalog extends LightningElement {
@@ -13,14 +12,13 @@ export default class GuitarVideoCatalog extends LightningElement {
     _openHandler = null;
     _messageHandler = null;
     _filterPoll = null;
+    _lastAccessActionKey = '';
 
     @wire(getVideos, { level: '$selectedLevel', category: '$selectedCategory' })
     wiredVideos;
 
     connectedCallback() {
-        getMyAccess()
-            .then(result => { this.accessInfo = result; })
-            .catch(() => {});
+        this._loadAccess();
 
         // Persist conversationId across LWR navigation (component is recreated on each page)
         this._conversationId = localStorage.getItem('ga_conversationId') || null;
@@ -31,19 +29,6 @@ export default class GuitarVideoCatalog extends LightningElement {
         };
 
         this._applyFilter = () => {
-            const convId = this._conversationId || localStorage.getItem('ga_conversationId');
-            if (convId) {
-                getAgentAction({ conversationId: convId })
-                    .then(result => {
-                        if (result?.action === 'FILTER') {
-                            const payload = JSON.parse(result.json || '{}');
-                            this.selectedLevel    = payload.level    || '';
-                            this.selectedCategory = payload.category || '';
-                        }
-                    })
-                    .catch(() => {});
-            }
-            // Always also poll FilterState__c as a belt-and-suspenders fallback
             getFilterSettings()
                 .then(result => {
                     if (!result) return;
@@ -53,6 +38,7 @@ export default class GuitarVideoCatalog extends LightningElement {
                         this.selectedLevel    = lvl;
                         this.selectedCategory = cat;
                     }
+                    this._handleAccessAction(result);
                 })
                 .catch(() => {});
         };
@@ -116,5 +102,22 @@ export default class GuitarVideoCatalog extends LightningElement {
 
     handleCategoryChange(event) {
         this.selectedCategory = event.target.value;
+    }
+
+    _loadAccess() {
+        getMyAccess()
+            .then(result => { this.accessInfo = result; })
+            .catch(() => {});
+    }
+
+    _handleAccessAction(result) {
+        const action = result?.action || '';
+        const actionVideoId = result?.actionVideoId || '';
+        const actionKey = `${action}:${actionVideoId}`;
+        if (!action || actionKey === this._lastAccessActionKey) return;
+        this._lastAccessActionKey = actionKey;
+        if (action === 'PURCHASE' || action === 'SUBSCRIBE') {
+            this._loadAccess();
+        }
     }
 }
