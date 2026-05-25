@@ -105,11 +105,18 @@ export default class GuitarFeaturedLessons extends NavigationMixin(LightningElem
 
     _handleAccessAction(result) {
         const action = result?.action || '';
+        if (!action) return;
+        // Subscribe is account-wide and _loadAccess is idempotent — always refresh so a
+        // monthly->annual upgrade (same 'SUBSCRIBE' key) still updates the "Subscribed until" date.
+        if (action === 'SUBSCRIBE') {
+            this._loadAccess();
+            return;
+        }
         const actionVideoId = result?.actionVideoId || '';
         const actionKey = `${action}:${actionVideoId}`;
-        if (!action || actionKey === this._lastAccessActionKey) return;
+        if (actionKey === this._lastAccessActionKey) return;
         this._lastAccessActionKey = actionKey;
-        if (action === 'PURCHASE' || action === 'SUBSCRIBE') {
+        if (action === 'PURCHASE') {
             this._loadAccess();
         }
     }
