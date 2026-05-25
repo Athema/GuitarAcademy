@@ -64,10 +64,18 @@ global without sharing class GuitarPurchaseController {
 
     private static SessionContext getSessionContext(String routableId) {
         SessionContext context = new SessionContext();
-        FilterState__c state = FilterState__c.getOrgDefaults();
-        context.currentPage = state.Current_Page__c != null ? state.Current_Page__c : '';
-        context.currentVideoId = state.Current_Video_Id__c != null ? state.Current_Video_Id__c : '';
-        context.currentContactId = state.Current_Contact_Id__c != null ? state.Current_Contact_Id__c : '';
+        if (String.isBlank(routableId)) return context;
+        List<MessagingSession> sessions = [
+            SELECT Current_Page__c, Current_Video_Id__c, Current_Contact_Id__c
+            FROM MessagingSession
+            WHERE Id = :routableId
+            LIMIT 1
+        ];
+        if (sessions.isEmpty()) return context;
+        MessagingSession ms = sessions[0];
+        context.currentPage = ms.Current_Page__c != null ? ms.Current_Page__c : '';
+        context.currentVideoId = ms.Current_Video_Id__c != null ? ms.Current_Video_Id__c : '';
+        context.currentContactId = ms.Current_Contact_Id__c != null ? ms.Current_Contact_Id__c : '';
         return context;
     }
 

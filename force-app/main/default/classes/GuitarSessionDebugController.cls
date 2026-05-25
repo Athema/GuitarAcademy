@@ -23,7 +23,7 @@ global without sharing class GuitarSessionDebugController {
         }
 
         List<MessagingSession> sessions = [
-            SELECT Id, Current_Page__c, Current_Video_Id__c, Action__c, ActionJSON__c,
+            SELECT Id, Current_Page__c, Current_Video_Id__c, Current_Contact_Id__c, Action__c, ActionJSON__c,
                    MessagingEndUserId, MessagingEndUser.Name, MessagingEndUser.ContactId
             FROM MessagingSession
             WHERE Conversation.ConversationIdentifier = :conversationId
@@ -50,6 +50,7 @@ global without sharing class GuitarSessionDebugController {
         r.put('endUserName', ms.MessagingEndUser != null && ms.MessagingEndUser.Name != null ? ms.MessagingEndUser.Name : '');
         r.put('contactId', ms.MessagingEndUser != null && ms.MessagingEndUser.ContactId != null
                            ? String.valueOf(ms.MessagingEndUser.ContactId) : '');
+        r.put('sessionContactId', ms.Current_Contact_Id__c != null ? ms.Current_Contact_Id__c : '');
 
         // Derived guard state — mirrors the agent's available-when conditions exactly.
         r.put('filterGuard',   page == 'catalog' ? 'OPEN' : 'closed');

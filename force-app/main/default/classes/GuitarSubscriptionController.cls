@@ -20,8 +20,7 @@ global without sharing class GuitarSubscriptionController {
         for (SubscriptionRequest req : requests) {
             SubscriptionResult res = new SubscriptionResult();
             try {
-                FilterState__c state = FilterState__c.getOrgDefaults();
-                String contactIdStr = String.isNotBlank(req.contactId) ? req.contactId : state.Current_Contact_Id__c;
+                String contactIdStr = String.isNotBlank(req.contactId) ? req.contactId : getSessionContactId(req.routableId);
                 Id contactId = String.isNotBlank(contactIdStr) ? (Id)contactIdStr : null;
                 if (contactId == null) {
                     res.message = 'Could not identify your account. Please try again.';
@@ -73,8 +72,13 @@ global without sharing class GuitarSubscriptionController {
         return '';
     }
 
-    private static String getSessionPage(FilterState__c state) {
-        return state.Current_Page__c != null ? state.Current_Page__c : '';
+    private static String getSessionContactId(String routableId) {
+        if (String.isBlank(routableId)) return '';
+        List<MessagingSession> sessions = [
+            SELECT Current_Contact_Id__c FROM MessagingSession WHERE Id = :routableId LIMIT 1
+        ];
+        if (sessions.isEmpty() || sessions[0].Current_Contact_Id__c == null) return '';
+        return sessions[0].Current_Contact_Id__c;
     }
 
     private static void publishAccessAction(String routableId) {

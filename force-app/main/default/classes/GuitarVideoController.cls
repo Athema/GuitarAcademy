@@ -198,6 +198,10 @@ global without sharing class GuitarVideoController {
                 SObject ms = new MessagingSession(Id = sessions[0].Id);
                 ms.put('Current_Page__c', pageName);
                 ms.put('Current_Video_Id__c', String.isNotBlank(videoId) ? videoId : null);
+                // Stamp the logged-in student's Contact Id so the guest-context agent can identify
+                // them for purchase/subscribe without FilterState__c.
+                Id stampContactId = getContactId();
+                if (stampContactId != null) ms.put('Current_Contact_Id__c', String.valueOf(stampContactId));
                 // Navigating to any non-video page clears the agent FILTER action, so the catalog
                 // opens clean — cleared in session context, not just hidden in the UI.
                 if (pageName != 'video') {
@@ -226,6 +230,10 @@ global without sharing class GuitarVideoController {
                 SObject ms = new MessagingSession(Id = sessions[0].Id);
                 ms.put('Current_Page__c', pageName);
                 ms.put('Current_Video_Id__c', String.isNotBlank(videoId) ? videoId : null);
+                // Stamp the logged-in student's Contact Id so the guest-context agent can identify
+                // them for purchase/subscribe without FilterState__c.
+                Id stampContactId = getContactId();
+                if (stampContactId != null) ms.put('Current_Contact_Id__c', String.valueOf(stampContactId));
                 // Navigating to any non-video page clears the agent FILTER action, so the catalog
                 // opens clean — cleared in session context, not just hidden in the UI.
                 if (pageName != 'video') {

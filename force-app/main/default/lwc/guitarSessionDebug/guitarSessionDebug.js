@@ -48,6 +48,7 @@ export default class GuitarSessionDebug extends LightningElement {
     action = '';
     endUserName = '';
     contactId = '';
+    sessionContactId = '';
     filterGuard = '—';
     purchaseGuard = '—';
     resolveLatency = '—';
@@ -131,6 +132,7 @@ export default class GuitarSessionDebug extends LightningElement {
                 this.action = snap.action || '';
                 this.endUserName = snap.endUserName || '';
                 this.contactId = snap.contactId || '(null)';
+                this.sessionContactId = snap.sessionContactId || '(blank)';
                 this.filterGuard = snap.filterGuard || '—';
                 this.purchaseGuard = snap.purchaseGuard || '—';
                 if (snap.found === 'true' && !this._resolvedAt && this._openedAt) {
