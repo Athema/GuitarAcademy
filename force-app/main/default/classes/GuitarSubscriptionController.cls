@@ -53,7 +53,7 @@ global without sharing class GuitarSubscriptionController {
                     Status__c = 'Active',
                     End_Date__c = endDate
                 );
-                publishAccessAction();
+                publishAccessAction(req.routableId);
 
                 String price = plan == 'Annual' ? '$79.99/yr' : '$9.99/mo';
                 res.message = 'Subscribed! Your ' + plan + ' plan (' + price + ') is active until ' + endDate.format() + '. All lessons are now unlocked.';
@@ -77,10 +77,23 @@ global without sharing class GuitarSubscriptionController {
         return state.Current_Page__c != null ? state.Current_Page__c : '';
     }
 
-    private static void publishAccessAction() {
+    private static void publishAccessAction(String routableId) {
+        // Legacy FilterState__c write — kept during migration so the polling UI keeps working.
         FilterState__c state = FilterState__c.getOrgDefaults();
         state.Action__c = 'SUBSCRIBE';
         state.Action_Video_Id__c = null;
         upsert state;
+        // New: stamp the agent's own MessagingSession so the outbound read can move off FilterState__c.
+        stampSession(routableId, 'SUBSCRIBE');
+    }
+
+    private static void stampSession(String routableId, String action) {
+        if (String.isBlank(routableId)) return;
+        List<MessagingSession> sessions = [SELECT Id FROM MessagingSession WHERE Id = :routableId LIMIT 1];
+        if (sessions.isEmpty()) return;
+        SObject ms = new MessagingSession(Id = sessions[0].Id);
+        ms.put('Action__c', action);
+        ms.put('ActionJSON__c', null);
+        update ms;
     }
 }

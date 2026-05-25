@@ -43,7 +43,8 @@
       "PowerShell(git checkout -b messagingSession)",
       "Bash(cat force-app/main/default/lwc/guitarSessionDebug/guitarSessionDebug.js-meta.xml)",
       "Bash(grep -rl \"guitarSessionDebug\\\\|sessionDebug\\\\|SessionDebug\" force-app/main/default/digitalExperiences/)",
-      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app/main/default/permissionsets/Guitar_Academy_Student.permissionset-meta.xml --target-org GuitarAcademy 2>&1 | Select-Object -Last 3)"
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app/main/default/permissionsets/Guitar_Academy_Student.permissionset-meta.xml --target-org GuitarAcademy 2>&1 | Select-Object -Last 3)",
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app/main/default/classes/GuitarPurchaseController.cls --source-dir force-app/main/default/classes/GuitarSubscriptionController.cls --target-org GuitarAcademy 2>&1 | Out-Null; sf project deploy report --use-most-recent --target-org GuitarAcademy 2>&1 | Select-String \"Succeeded|Failed|numberComponentErrors|Error:\" | Select-Object -First 5)"
     ]
   }
 }
