@@ -88,20 +88,33 @@ global without sharing class GuitarVideoController {
         return 'Done! The catalog is now showing ' + filterDesc + '.';
     }
 
+    // Reads the agent action straight from the MessagingSession (by conversationId) and
+    // flattens ActionJSON__c into the same keys getFilterSettings returns, so the LWC outbound
+    // path can swap source with minimal change. This is the session-based replacement for the
+    // FilterState__c polling.
     @AuraEnabled(cacheable=false)
     global static Map<String, String> getAgentAction(String conversationId) {
+        Map<String, String> result = new Map<String, String>{
+            'action' => '', 'level' => '', 'category' => '', 'actionVideoId' => ''
+        };
+        if (String.isBlank(conversationId)) return result;
         try {
-            List<SObject> sessions = Database.query(
-                'SELECT Id, Action__c, ActionJSON__c FROM MessagingSession ' +
-                'WHERE Conversation.ConversationIdentifier = \'' + String.escapeSingleQuotes(conversationId) + '\' ' +
-                'LIMIT 1'
-            );
-            Map<String, String> result = new Map<String, String>();
+            List<MessagingSession> sessions = [
+                SELECT Id, Action__c, ActionJSON__c
+                FROM MessagingSession
+                WHERE Conversation.ConversationIdentifier = :conversationId
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
             if (sessions.isEmpty()) return result;
-            Object action = sessions[0].get('Action__c');
-            Object json = sessions[0].get('ActionJSON__c');
-            result.put('action', action != null ? String.valueOf(action) : '');
-            result.put('json', json != null ? String.valueOf(json) : '');
+            MessagingSession ms = sessions[0];
+            result.put('action', ms.Action__c != null ? ms.Action__c : '');
+            if (String.isNotBlank(ms.ActionJSON__c)) {
+                Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(ms.ActionJSON__c);
+                if (payload.get('level') != null)    result.put('level', String.valueOf(payload.get('level')));
+                if (payload.get('category') != null) result.put('category', String.valueOf(payload.get('category')));
+                if (payload.get('videoId') != null)  result.put('actionVideoId', String.valueOf(payload.get('videoId')));
+            }
             return result;
         } catch (Exception e) {
             return new Map<String, String>{ 'error' => e.getMessage() };

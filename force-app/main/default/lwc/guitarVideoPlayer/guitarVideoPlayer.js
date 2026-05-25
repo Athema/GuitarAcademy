@@ -5,7 +5,7 @@ import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import hasVideoAccess from '@salesforce/apex/GuitarVideoController.hasVideoAccess';
 import purchaseVideo from '@salesforce/apex/GuitarVideoController.purchaseVideo';
 import createSubscription from '@salesforce/apex/GuitarVideoController.createSubscription';
-import getFilterSettings from '@salesforce/apex/GuitarVideoController.getFilterSettings';
+import getAgentAction from '@salesforce/apex/GuitarVideoController.getAgentAction';
 import updateContactPage from '@salesforce/apex/GuitarVideoController.updateContactPage';
 import GUITAR_ACADEMY_ACCESS from '@salesforce/messageChannel/GuitarAcademyAccess__c';
 import DIRECT_PURCHASE_ENABLED from '@salesforce/label/c.Direct_Purchase_Enabled';
@@ -33,7 +33,6 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
     @track actionSuccess = '';
 
     _previewTimer;
-    _agentAccessPoll;
     _lastAgentActionKey = '';
     _accessChecked = false;
     _lastSyncedVideoId = '';
@@ -127,12 +126,12 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
                 if (this.isPlaying) this._reloadIframe();
             }
         });
-        this._agentAccessPoll = setInterval(() => {
-            getFilterSettings()
-                .then(result => this._handleAgentAccessAction(result))
-                .catch(() => {});
-        }, 2000);
-        this._messageSentHandler = () => this._syncVideoPageState(true);
+        // Outbound is now event-driven off the agent's reply (onEmbeddedMessageSent),
+        // reading the agent action straight from the MessagingSession — no polling.
+        this._messageSentHandler = () => {
+            this._syncVideoPageState(true);
+            this._checkAgentAccess();
+        };
         this._conversationOpenedHandler = () => this._syncVideoPageState(true);
         window.addEventListener('onEmbeddedMessageSent', this._messageSentHandler);
         window.addEventListener('onEmbeddedMessagingConversationOpened', this._conversationOpenedHandler);
@@ -158,7 +157,6 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
 
     disconnectedCallback() {
         this._clearPreviewTimer();
-        if (this._agentAccessPoll) clearInterval(this._agentAccessPoll);
         if (this._pageStateWarmup) clearInterval(this._pageStateWarmup);
         if (this._messageSentHandler) window.removeEventListener('onEmbeddedMessageSent', this._messageSentHandler);
         if (this._conversationOpenedHandler) window.removeEventListener('onEmbeddedMessagingConversationOpened', this._conversationOpenedHandler);
@@ -232,6 +230,14 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
         this._clearPreviewTimer();
         publish(this.messageContext, GUITAR_ACADEMY_ACCESS, { videoId: this.recordId });
         if (this.isPlaying) this._reloadIframe();
+    }
+
+    _checkAgentAccess() {
+        const conversationId = localStorage.getItem('ga_conversationId');
+        if (!conversationId) return;
+        getAgentAction({ conversationId })
+            .then(result => this._handleAgentAccessAction(result))
+            .catch(() => {});
     }
 
     _handleAgentAccessAction(result) {
