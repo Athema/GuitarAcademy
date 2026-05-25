@@ -38,7 +38,12 @@
       "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf data query --query \"SELECT Id, Name, SessionKey, Current_Page__c, Status FROM MessagingSession ORDER BY CreatedDate DESC LIMIT 3\" --target-org GuitarAcademy 2>&1 | Select-String -NotMatch \"Warning|TLS|node:|En l|Categ|Quali|Fully\")",
       "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app --target-org GuitarAcademy 2>&1 | Select-Object -Last 8)",
       "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy report --use-most-recent 2>&1 | Select-Object -First 6)",
-      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf data import bulk --sobject Guitar_Video__c --file data\\\\guitar_videos_import.csv --target-org GuitarAcademy --wait 5 2>&1)"
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf data import bulk --sobject Guitar_Video__c --file data\\\\guitar_videos_import.csv --target-org GuitarAcademy --wait 5 2>&1)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\avila\\\\OneDrive\\\\Desktop\\\\GuitarAcademy\\\\force-app\\\\main\\\\default\\\\classes\\\\\" -Filter \"*.cls\" | Select-Object Name)",
+      "PowerShell(git checkout -b messagingSession)",
+      "Bash(cat force-app/main/default/lwc/guitarSessionDebug/guitarSessionDebug.js-meta.xml)",
+      "Bash(grep -rl \"guitarSessionDebug\\\\|sessionDebug\\\\|SessionDebug\" force-app/main/default/digitalExperiences/)",
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app/main/default/permissionsets/Guitar_Academy_Student.permissionset-meta.xml --target-org GuitarAcademy 2>&1 | Select-Object -Last 3)"
     ]
   }
 }

@@ -7,6 +7,10 @@
         <apexClass>GuitarVideoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>GuitarSessionDebugController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
 
     <fieldPermissions>
         <editable>false</editable>

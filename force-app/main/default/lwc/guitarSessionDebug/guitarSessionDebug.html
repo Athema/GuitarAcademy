@@ -1,12 +1,31 @@
 <template>
-    <div class="debug-bar">
-        <span class="label">Page:</span>
-        <span class="value">{currentPage}</span>
-        <span class="label" style="margin-left:1rem">Raw:</span>
-        <span class="value">{rawPageRef}</span>
-        <span class="label" style="margin-left:1rem">SessionKey:</span>
-        <span class="value">{sessionKeyDisplay}</span>
-        <span class="label" style="margin-left:1rem">Agent sees:</span>
-        <span class="value">{agentPage}</span>
+    <div lwc:if={isLoggedIn} class="debug-panel">
+        <div class="row">
+            <span class="tag">LWC</span>
+            <span class="label">page:</span><span class="value">{currentPage}</span>
+            <span class="label">raw:</span><span class="dim">{rawPageRef}</span>
+            <span class="label">convId:</span><span class="dim">{conversationId}</span>
+            <span class="label">session:</span><span class="dim">{sessionId}</span>
+            <span class="label">found:</span><span class="value">{found}</span>
+            <span class="label">resolve:</span><span class="value">{resolveLatency}</span>
+        </div>
+        <div class="row">
+            <span class="tag tag-agent">AGENT SEES</span>
+            <span class="label">page:</span><span class="value">{agentPage}</span>
+            <span class="label">video:</span><span class="dim">{agentVideo}</span>
+            <span class="label">action:</span><span class="value">{action}</span>
+            <span class="label">endUser:</span><span class="dim">{endUserName}</span>
+            <span class="label">contact:</span><span class="dim">{contactId}</span>
+        </div>
+        <div class="row">
+            <span class="tag tag-guard">GUARDS</span>
+            <span class="label">filter_catalog:</span><span class={filterClass}>{filterGuard}</span>
+            <span class="label">purchase_video:</span><span class={purchaseClass}>{purchaseGuard}</span>
+        </div>
+        <div class="logbox">
+            <template for:each={logLines} for:item="l">
+                <div key={l.id} class="logline">{l.text}</div>
+            </template>
+        </div>
     </div>
 </template>
