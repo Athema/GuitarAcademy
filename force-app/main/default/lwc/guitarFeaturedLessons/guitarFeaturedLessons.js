@@ -2,7 +2,7 @@ import { LightningElement, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getFeaturedVideos from '@salesforce/apex/GuitarVideoController.getFeaturedVideos';
 import getMyAccess from '@salesforce/apex/GuitarVideoController.getMyAccess';
-import getFilterSettings from '@salesforce/apex/GuitarVideoController.getFilterSettings';
+import getAgentAction from '@salesforce/apex/GuitarVideoController.getAgentAction';
 import updateContactPage from '@salesforce/apex/GuitarVideoController.updateContactPage';
 
 export default class GuitarFeaturedLessons extends NavigationMixin(LightningElement) {
@@ -10,20 +10,36 @@ export default class GuitarFeaturedLessons extends NavigationMixin(LightningElem
     wiredVideos;
 
     @track accessInfo;
-    _accessPoll;
+    _conversationId = null;
+    _openHandler = null;
+    _messageHandler = null;
     _lastAccessActionKey = '';
 
     connectedCallback() {
         this._loadAccess();
-        this._accessPoll = setInterval(() => {
-            getFilterSettings()
+        this._conversationId = localStorage.getItem('ga_conversationId') || null;
+
+        this._openHandler = (event) => {
+            this._conversationId = event.detail?.conversationId || null;
+            if (this._conversationId) localStorage.setItem('ga_conversationId', this._conversationId);
+        };
+
+        // Event-driven off the agent's reply — read the action from the MessagingSession (no poll).
+        this._messageHandler = (event) => {
+            if (!event.detail?.conversationEntry) return;
+            if (!this._conversationId) return;
+            getAgentAction({ conversationId: this._conversationId })
                 .then(result => this._handleAccessAction(result))
                 .catch(() => {});
-        }, 2000);
+        };
+
+        window.addEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+        window.addEventListener('onEmbeddedMessageSent', this._messageHandler);
     }
 
     disconnectedCallback() {
-        if (this._accessPoll) clearInterval(this._accessPoll);
+        if (this._openHandler) window.removeEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+        if (this._messageHandler) window.removeEventListener('onEmbeddedMessageSent', this._messageHandler);
     }
 
     _loadAccess() {
