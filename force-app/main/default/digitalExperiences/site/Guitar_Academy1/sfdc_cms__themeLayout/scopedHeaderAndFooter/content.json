@@ -14,6 +14,7 @@
             "backgroundImageConfig" : "",
             "backgroundImageOverlay" : "rgba(0,0,0,0)",
             "componentSpacerSize" : "",
+            "dxpStyle" : { },
             "layoutDirectionDesktop" : "row",
             "layoutDirectionMobile" : "column",
             "layoutDirectionTablet" : "column",
@@ -29,6 +30,7 @@
                 "columnGutterWidth" : "",
                 "columnMinHeight" : "",
                 "columnVerticalAlign" : "center",
+                "dxpStyle" : { },
                 "layoutDirectionDesktop" : "row",
                 "layoutDirectionMobile" : "column",
                 "layoutDirectionTablet" : "column",
@@ -67,6 +69,7 @@
                         "dropdownTextDecorationOverride" : "",
                         "dropdownTextStyle" : "body-regular",
                         "dropdownTopBorderRadius" : "5px",
+                        "dxpStyle" : { },
                         "fontSizeOverride" : "",
                         "fontWeightOverride" : "",
                         "iconSize" : "xx-small",
@@ -94,6 +97,7 @@
                     "children" : [ {
                       "attributes" : {
                         "burgerIconHorizontalAlignment" : "left",
+                        "dxpStyle" : { },
                         "modalAccordionIconSize" : "xx-small",
                         "modalActiveBackgroundColor" : "rgba(255, 255, 255, 0)",
                         "modalActiveLineWeight" : "5px",
@@ -162,7 +166,9 @@
               "id" : "5436d2b0-25a8-4ab1-a77e-0801c434d93d",
               "type" : "component"
             }, {
-              "attributes" : { },
+              "attributes" : {
+                "dxpStyle" : { }
+              },
               "definition" : "c:guitarAcademyHeader",
               "id" : "aa82094d-ddd2-490c-8583-436c192e6724",
               "type" : "component"
@@ -186,6 +192,7 @@
             "backgroundImageConfig" : "",
             "backgroundImageOverlay" : "rgba(0,0,0,0)",
             "componentSpacerSize" : "",
+            "dxpStyle" : { },
             "layoutDirectionDesktop" : "row",
             "layoutDirectionMobile" : "column",
             "layoutDirectionTablet" : "column",
@@ -205,7 +212,9 @@
           "id" : "7aace5e8-b544-4ee5-97c3-c3cf0acf4162",
           "type" : "component"
         }, {
-          "attributes" : { },
+          "attributes" : {
+            "dxpStyle" : { }
+          },
           "definition" : "c:guitarPageTracker",
           "id" : "063249ae-61f9-417a-806f-14a12d5def5d",
           "type" : "component"
@@ -213,7 +222,10 @@
           "attributes" : {
             "clientVersion" : "WebV1",
             "deploymentName" : "Guitar_Academy_Channel",
-            "hideChatButtonOnLoad" : "Default",
+            "dxpStyle" : {
+              "isVisible" : true
+            },
+            "hideChatButtonOnLoad" : "Visible",
             "isExpSiteAuthMode" : false,
             "scrtUrl" : "https://orgfarm-96c3beb92c-dev-ed.develop.my.salesforce-scrt.com",
             "siteEndpoint" : "https://orgfarm-96c3beb92c-dev-ed.develop.my.site.com/ESWGuitarAcademyChannel1779614429251"
@@ -244,6 +256,24 @@
       "definition" : "community_byo:scopedHeaderAndFooter",
       "id" : "3720d040-daf3-4015-aea4-8844a7b3db75",
       "type" : "component"
+    },
+    "contentOperations" : {
+      "operations" : [ {
+        "targetId" : "85593b49-b2b2-4583-8da6-3d2ec02cebe1",
+        "isHiddenOnOperationSuccess" : false,
+        "isActive" : true,
+        "rule" : {
+          "name" : "cdfa9ebc-88fb-42e3-b96d-96da3e9fbeb9",
+          "description" : "",
+          "criteriaType" : "AllCriteriaMatch",
+          "expressionCriteria" : [ {
+            "resource" : "User.isGuest",
+            "operator" : "Equal",
+            "value" : false,
+            "criterionNumber" : 1
+          } ]
+        }
+      } ]
     }
   },
   "urlName" : "scoped-header-and-footer"

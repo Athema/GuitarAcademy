@@ -9,6 +9,7 @@
             "backgroundImageConfig" : "",
             "backgroundImageOverlay" : "rgba(0,0,0,0)",
             "componentSpacerSize" : "",
+            "dxpStyle" : { },
             "layoutDirectionDesktop" : "row",
             "layoutDirectionMobile" : "column",
             "layoutDirectionTablet" : "column",
@@ -35,6 +36,7 @@
       }, {
         "children" : [ {
           "attributes" : {
+            "dxpStyle" : { },
             "recordId" : "{!recordId}"
           },
           "definition" : "community_builder:seoAssistant",
