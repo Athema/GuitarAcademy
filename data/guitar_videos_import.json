@@ -1,0 +1,70 @@
+{
+  "records": [
+    {
+      "attributes": { "type": "Guitar_Video__c", "referenceId": "GuitarVideoRef1" },
+      "Name": "Old-School R&B Guitar: At Last (Etta James)",
+      "YouTube_ID__c": "JgGuQwQ5kgo",
+      "Level__c": "Intermediate",
+      "Category__c": "Song Lesson",
+      "Price__c": 10.99,
+      "Duration_Minutes__c": 16,
+      "Is_Free_Preview__c": false,
+      "Description__c": "Learn to play this classic Etta James standard with soul-drenched R&B chord voicings and smooth melodic phrasing."
+    },
+    {
+      "attributes": { "type": "Guitar_Video__c", "referenceId": "GuitarVideoRef2" },
+      "Name": "Soloing on Long Train Runnin",
+      "YouTube_ID__c": "zgv31Oo1N-I",
+      "Level__c": "Intermediate",
+      "Category__c": "Song Lesson",
+      "Price__c": 11.99,
+      "Duration_Minutes__c": 18,
+      "Is_Free_Preview__c": false,
+      "Description__c": "Craft expressive bluesy solos over this Doobie Brothers classic using pentatonic vocabulary and soulful phrasing."
+    },
+    {
+      "attributes": { "type": "Guitar_Video__c", "referenceId": "GuitarVideoRef3" },
+      "Name": "Modern Soulful R&B Rhythm Guitar",
+      "YouTube_ID__c": "Iki1s2i6FPQ",
+      "Level__c": "Intermediate",
+      "Category__c": "Technique",
+      "Price__c": 11.99,
+      "Duration_Minutes__c": 14,
+      "Is_Free_Preview__c": false,
+      "Description__c": "Master the layered chord techniques and rhythmic patterns that define modern R&B and soul guitar playing."
+    },
+    {
+      "attributes": { "type": "Guitar_Video__c", "referenceId": "GuitarVideoRef4" },
+      "Name": "Learn These Essential Soul Guitar Moves",
+      "YouTube_ID__c": "Fs7eZse3mlE",
+      "Level__c": "Intermediate",
+      "Category__c": "Technique",
+      "Price__c": 10.99,
+      "Duration_Minutes__c": 13,
+      "Is_Free_Preview__c": false,
+      "Description__c": "Old-school soul guitar vocabulary: sweet chord embellishments and double stops you can use on any major chord."
+    },
+    {
+      "attributes": { "type": "Guitar_Video__c", "referenceId": "GuitarVideoRef5" },
+      "Name": "Blues Meets Jazz: Robben Ford Chord Tricks",
+      "YouTube_ID__c": "0hNeEXIdCO4",
+      "Level__c": "Advanced",
+      "Category__c": "Technique",
+      "Price__c": 13.99,
+      "Duration_Minutes__c": 20,
+      "Is_Free_Preview__c": false,
+      "Description__c": "Bridge the gap between blues and jazz with Robben Ford signature chord substitutions and sophisticated voicings."
+    },
+    {
+      "attributes": { "type": "Guitar_Video__c", "referenceId": "GuitarVideoRef6" },
+      "Name": "Play Blues Like Robben Ford!",
+      "YouTube_ID__c": "FHhlq3JbL08",
+      "Level__c": "Advanced",
+      "Category__c": "Song Lesson",
+      "Price__c": 14.99,
+      "Duration_Minutes__c": 22,
+      "Is_Free_Preview__c": false,
+      "Description__c": "Two choruses of jazz-blues improvisation in the Robben Ford style with sophisticated phrasing over classic changes."
+    }
+  ]
+}
