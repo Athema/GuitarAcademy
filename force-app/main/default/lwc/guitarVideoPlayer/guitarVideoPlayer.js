@@ -5,6 +5,8 @@ import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import hasVideoAccess from '@salesforce/apex/GuitarVideoController.hasVideoAccess';
 import purchaseVideo from '@salesforce/apex/GuitarVideoController.purchaseVideo';
 import createSubscription from '@salesforce/apex/GuitarVideoController.createSubscription';
+import getFilterSettings from '@salesforce/apex/GuitarVideoController.getFilterSettings';
+import updateContactPage from '@salesforce/apex/GuitarVideoController.updateContactPage';
 import GUITAR_ACADEMY_ACCESS from '@salesforce/messageChannel/GuitarAcademyAccess__c';
 import DIRECT_PURCHASE_ENABLED from '@salesforce/label/c.Direct_Purchase_Enabled';
 
@@ -31,7 +33,14 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
     @track actionSuccess = '';
 
     _previewTimer;
+    _agentAccessPoll;
+    _lastAgentActionKey = '';
     _accessChecked = false;
+    _lastSyncedVideoId = '';
+    _pageStateWarmup;
+    _pageStateWarmupCount = 0;
+    _messageSentHandler;
+    _conversationOpenedHandler;
 
     @wire(MessageContext) messageContext;
 
@@ -39,6 +48,7 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
     handlePageRef(pageRef) {
         if (pageRef?.attributes?.recordId) {
             this.recordId = pageRef.attributes.recordId;
+            this._syncVideoPageState();
         }
     }
 
@@ -117,9 +127,27 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
                 if (this.isPlaying) this._reloadIframe();
             }
         });
+        this._agentAccessPoll = setInterval(() => {
+            getFilterSettings()
+                .then(result => this._handleAgentAccessAction(result))
+                .catch(() => {});
+        }, 2000);
+        this._messageSentHandler = () => this._syncVideoPageState(true);
+        this._conversationOpenedHandler = () => this._syncVideoPageState(true);
+        window.addEventListener('onEmbeddedMessageSent', this._messageSentHandler);
+        window.addEventListener('onEmbeddedMessagingConversationOpened', this._conversationOpenedHandler);
+        this._pageStateWarmup = setInterval(() => {
+            this._pageStateWarmupCount += 1;
+            this._syncVideoPageState(true);
+            if (this._pageStateWarmupCount >= 20) {
+                clearInterval(this._pageStateWarmup);
+                this._pageStateWarmup = null;
+            }
+        }, 500);
     }
 
     renderedCallback() {
+        this._syncVideoPageState();
         if (this.recordId && !this._accessChecked) {
             this._accessChecked = true;
             hasVideoAccess({ videoId: this.recordId })
@@ -130,6 +158,10 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
 
     disconnectedCallback() {
         this._clearPreviewTimer();
+        if (this._agentAccessPoll) clearInterval(this._agentAccessPoll);
+        if (this._pageStateWarmup) clearInterval(this._pageStateWarmup);
+        if (this._messageSentHandler) window.removeEventListener('onEmbeddedMessageSent', this._messageSentHandler);
+        if (this._conversationOpenedHandler) window.removeEventListener('onEmbeddedMessagingConversationOpened', this._conversationOpenedHandler);
     }
 
     handleBack() {
@@ -200,6 +232,36 @@ export default class GuitarVideoPlayer extends NavigationMixin(LightningElement)
         this._clearPreviewTimer();
         publish(this.messageContext, GUITAR_ACADEMY_ACCESS, { videoId: this.recordId });
         if (this.isPlaying) this._reloadIframe();
+    }
+
+    _handleAgentAccessAction(result) {
+        const action = result?.action || '';
+        const actionVideoId = result?.actionVideoId || '';
+        const actionKey = `${action}:${actionVideoId}`;
+        if (!action || actionKey === this._lastAgentActionKey) return;
+        this._lastAgentActionKey = actionKey;
+        if (action === 'SUBSCRIBE' || (action === 'PURCHASE' && actionVideoId === this.recordId)) {
+            this.actionSuccess = action === 'PURCHASE' ? 'purchase' : 'subscribe';
+            this._grantAccess();
+        }
+    }
+
+    _syncVideoPageState(force = false) {
+        const videoId = this.recordId || this._getVideoIdFromUrl();
+        if (!videoId) return;
+        if (!this.recordId) this.recordId = videoId;
+        if (!force && videoId === this._lastSyncedVideoId) return;
+        this._lastSyncedVideoId = videoId;
+        updateContactPage({
+            pageName: 'video',
+            sessionKey: localStorage.getItem('ga_conversationId') || null,
+            videoId
+        }).catch(() => {});
+    }
+
+    _getVideoIdFromUrl() {
+        const match = window.location.pathname.match(/\/guitar-video\/([^/?#]+)/i);
+        return match ? decodeURIComponent(match[1]) : '';
     }
 
     _startPreviewTimer() {

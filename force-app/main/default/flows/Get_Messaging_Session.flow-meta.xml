@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description>Fetches the MessagingSession record by Id and returns it as a record output so the Agent Router can read any field via dot notation.</description>
+    <label>Get Messaging Session</label>
+    <interviewLabel>Get Messaging Session {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <runInMode>SystemModeWithoutSharing</runInMode>
+    <status>Active</status>
+    <variables>
+        <name>inRoutableId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <description>The MessagingSession record Id</description>
+    </variables>
+    <variables>
+        <name>MessagingSession</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <objectType>MessagingSession</objectType>
+        <description>The full MessagingSession record — agent accesses fields via @outputs.MessagingSession.data.FieldName</description>
+    </variables>
+    <start>
+        <locationX>176</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>Get_Messaging_Session</targetReference>
+        </connector>
+    </start>
+    <recordLookups>
+        <name>Get_Messaging_Session</name>
+        <label>Get Messaging Session</label>
+        <locationX>176</locationX>
+        <locationY>168</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>inRoutableId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>MessagingSession</object>
+        <outputReference>MessagingSession</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Current_Page__c</queriedFields>
+        <queriedFields>Current_Video_Id__c</queriedFields>
+        <storeOutputAutomatically>false</storeOutputAutomatically>
+    </recordLookups>
+</Flow>

@@ -1,38 +1,65 @@
 import { LightningElement, track, wire } from 'lwc';
-import { subscribe, unsubscribe } from 'lightning/empApi';
 import getVideos from '@salesforce/apex/GuitarVideoController.getVideos';
 import getMyAccess from '@salesforce/apex/GuitarVideoController.getMyAccess';
-
-const FILTER_CHANNEL = '/event/CatalogFilter__e';
+import getFilterSettings from '@salesforce/apex/GuitarVideoController.getFilterSettings';
 
 export default class GuitarVideoCatalog extends LightningElement {
     @track selectedLevel = '';
     @track selectedCategory = '';
     @track accessInfo;
 
-    _filterSubscription;
+    _conversationId = null;
+    _openHandler = null;
+    _messageHandler = null;
+    _filterPoll = null;
+    _lastAccessActionKey = '';
 
     @wire(getVideos, { level: '$selectedLevel', category: '$selectedCategory' })
     wiredVideos;
 
     connectedCallback() {
-        getMyAccess()
-            .then(result => { this.accessInfo = result; })
-            .catch(() => {});
+        this._loadAccess();
 
-        subscribe(FILTER_CHANNEL, -1, event => {
-            const payload = event.data.payload;
-            this.selectedLevel    = payload.Level__c    || '';
-            this.selectedCategory = payload.Category__c || '';
-        }).then(response => {
-            this._filterSubscription = response;
-        });
+        // Persist conversationId across LWR navigation (component is recreated on each page)
+        this._conversationId = localStorage.getItem('ga_conversationId') || null;
+
+        this._openHandler = (event) => {
+            this._conversationId = event.detail?.conversationId || null;
+            if (this._conversationId) localStorage.setItem('ga_conversationId', this._conversationId);
+        };
+
+        this._applyFilter = () => {
+            getFilterSettings()
+                .then(result => {
+                    if (!result) return;
+                    const lvl = result.level    || '';
+                    const cat = result.category || '';
+                    if (lvl !== this.selectedLevel || cat !== this.selectedCategory) {
+                        this.selectedLevel    = lvl;
+                        this.selectedCategory = cat;
+                    }
+                    this._handleAccessAction(result);
+                })
+                .catch(() => {});
+        };
+
+        // Trigger immediately on agent messages (only agent messages carry conversationEntry)
+        this._messageHandler = (event) => {
+            if (!event.detail?.conversationEntry) return;
+            this._applyFilter();
+        };
+
+        // Poll every 2 s as fallback (covers timing gaps and page-load state)
+        this._filterPoll = setInterval(this._applyFilter, 2000);
+
+        window.addEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+        window.addEventListener('onEmbeddedMessageSent', this._messageHandler);
     }
 
     disconnectedCallback() {
-        if (this._filterSubscription) {
-            unsubscribe(this._filterSubscription, () => {});
-        }
+        if (this._openHandler)   window.removeEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+        if (this._messageHandler) window.removeEventListener('onEmbeddedMessageSent', this._messageHandler);
+        if (this._filterPoll)    clearInterval(this._filterPoll);
     }
 
     get videosWithAccess() {
@@ -75,5 +102,22 @@ export default class GuitarVideoCatalog extends LightningElement {
 
     handleCategoryChange(event) {
         this.selectedCategory = event.target.value;
+    }
+
+    _loadAccess() {
+        getMyAccess()
+            .then(result => { this.accessInfo = result; })
+            .catch(() => {});
+    }
+
+    _handleAccessAction(result) {
+        const action = result?.action || '';
+        const actionVideoId = result?.actionVideoId || '';
+        const actionKey = `${action}:${actionVideoId}`;
+        if (!action || actionKey === this._lastAccessActionKey) return;
+        this._lastAccessActionKey = actionKey;
+        if (action === 'PURCHASE' || action === 'SUBSCRIBE') {
+            this._loadAccess();
+        }
     }
 }

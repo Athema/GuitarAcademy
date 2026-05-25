@@ -1,7 +1,12 @@
 <template>
     <div class="debug-bar">
-        <span class="label">Session Page Context:</span>
+        <span class="label">Page:</span>
         <span class="value">{currentPage}</span>
-        <span class="session-id">Session: {shortSessionId}</span>
+        <span class="label" style="margin-left:1rem">Raw:</span>
+        <span class="value">{rawPageRef}</span>
+        <span class="label" style="margin-left:1rem">SessionKey:</span>
+        <span class="value">{sessionKeyDisplay}</span>
+        <span class="label" style="margin-left:1rem">Agent sees:</span>
+        <span class="value">{agentPage}</span>
     </div>
 </template>
