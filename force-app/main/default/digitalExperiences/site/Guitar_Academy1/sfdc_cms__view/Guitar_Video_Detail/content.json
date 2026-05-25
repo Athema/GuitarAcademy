@@ -1,0 +1,79 @@
+{
+  "type" : "sfdc_cms__view",
+  "title" : "Guitar Video Detail",
+  "contentBody" : {
+    "component" : {
+      "children" : [ {
+        "children" : [ {
+          "attributes" : {
+            "backgroundImageConfig" : "",
+            "backgroundImageOverlay" : "rgba(0,0,0,0)",
+            "componentSpacerSize" : "",
+            "layoutDirectionDesktop" : "row",
+            "layoutDirectionMobile" : "column",
+            "layoutDirectionTablet" : "column",
+            "maxContentWidth" : "",
+            "sectionColumnGutterWidth" : "",
+            "sectionConfig" : "{\"UUID\":\"711b9db7-6807-4889-86dc-e0fdbd68329a\",\"columns\":[{\"UUID\":\"1eda9b1d-53ce-41f0-88e6-7b1e72f5700b\",\"columnName\":\"Column 1\",\"columnKey\":\"col1\",\"columnWidth\":\"12\",\"seedComponents\":[]}]}",
+            "sectionMinHeight" : "",
+            "sectionVerticalAlign" : "flex-start"
+          },
+          "children" : [ {
+            "children" : [ {
+              "attributes" : { },
+              "definition" : "c:guitarVideoPlayer",
+              "id" : "b7ef4e68-6a6a-49a4-87dc-b26fd31c9968",
+              "type" : "component"
+            } ],
+            "id" : "1eda9b1d-53ce-41f0-88e6-7b1e72f5700b",
+            "name" : "col1",
+            "title" : "Column 1",
+            "type" : "region"
+          } ],
+          "definition" : "community_layout:section",
+          "id" : "711b9db7-6807-4889-86dc-e0fdbd68329a",
+          "type" : "component"
+        }, {
+          "attributes" : {
+            "clientVersion" : "WebV1",
+            "deploymentName" : "Guitar_Academy_Channel",
+            "hideChatButtonOnLoad" : "Default",
+            "isExpSiteAuthMode" : false,
+            "scrtUrl" : "https://orgfarm-96c3beb92c-dev-ed.develop.my.salesforce-scrt.com",
+            "siteEndpoint" : "https://orgfarm-96c3beb92c-dev-ed.develop.my.site.com/ESWGuitarAcademyChannel1779614429251"
+          },
+          "definition" : "experience_messaging:embeddedMessaging",
+          "id" : "2db82049-b59e-4854-acd9-bf6286f9e3c6",
+          "type" : "component"
+        } ],
+        "id" : "196fa978-e9b7-4cad-b466-531dc4d88287",
+        "name" : "content",
+        "title" : "Content",
+        "type" : "region"
+      }, {
+        "children" : [ {
+          "attributes" : {
+            "customHeadTags" : "",
+            "description" : "",
+            "pageTitle" : "{!Record._Object}: {!Record._Title}",
+            "recordId" : "{!recordId}"
+          },
+          "definition" : "community_builder:seoAssistant",
+          "id" : "b3c127e7-6a95-40d7-a1ba-2c94feedca81",
+          "type" : "component"
+        } ],
+        "id" : "a641a073-2b62-46bd-b987-1e79564f7196",
+        "name" : "sfdcHiddenRegion",
+        "title" : "sfdcHiddenRegion",
+        "type" : "region"
+      } ],
+      "definition" : "community_layout:sldsFlexibleLayout",
+      "id" : "ad8a42a8-818b-4a63-8564-f20e824e3341",
+      "type" : "component"
+    },
+    "dataProviders" : [ ],
+    "themeLayoutType" : "Inner",
+    "viewType" : "detail-Guitar_Video__c"
+  },
+  "urlName" : "guitar-video-detail"
+}
