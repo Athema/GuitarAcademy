@@ -89,9 +89,8 @@ global without sharing class GuitarVideoController {
     }
 
     // Reads the agent action straight from the MessagingSession (by conversationId) and
-    // flattens ActionJSON__c into the same keys getFilterSettings returns, so the LWC outbound
-    // path can swap source with minimal change. This is the session-based replacement for the
-    // FilterState__c polling.
+    // flattens ActionJSON__c into { action, level, category, actionVideoId }. This is the
+    // event-driven, per-session source the LWC outbound path reads on onEmbeddedMessageSent.
     @AuraEnabled(cacheable=false)
     global static Map<String, String> getAgentAction(String conversationId) {
         Map<String, String> result = new Map<String, String>{
@@ -150,12 +149,7 @@ global without sharing class GuitarVideoController {
                 'level'    => req.level    != null ? req.level    : '',
                 'category' => req.category != null ? req.category : ''
             };
-            // Write to FilterState__c for polling-based catalog update
-            FilterState__c state = FilterState__c.getOrgDefaults();
-            state.Level__c    = req.level;
-            state.Category__c = req.category;
-            upsert state;
-            // Also write to MessagingSession for event-driven approach
+            // Stamp the filter on the agent's own MessagingSession (the catalog reads it event-driven).
             if (String.isNotBlank(req.inRoutableId)) {
                 List<MessagingSession> sessions = [SELECT Id FROM MessagingSession WHERE Id = :req.inRoutableId LIMIT 1];
                 if (!sessions.isEmpty()) {
@@ -175,19 +169,12 @@ global without sharing class GuitarVideoController {
     public static void resetDemo() {
         delete [SELECT Id FROM Video_Purchase__c];
         delete [SELECT Id FROM Subscription__c];
-        FilterState__c state = FilterState__c.getOrgDefaults();
-        state.Level__c = null;
-        state.Category__c = null;
-        state.Action__c = null;
-        state.Action_Video_Id__c = null;
-        upsert state;
     }
 
     @AuraEnabled(cacheable=false)
     public static void updateContactPage(String pageName, String sessionKey, String videoId) {
         if (String.isBlank(pageName)) return;
         try {
-            savePageState(pageName, videoId);
             if (String.isBlank(sessionKey)) return;
             List<MessagingSession> sessions = [
                 SELECT Id FROM MessagingSession
@@ -220,7 +207,6 @@ global without sharing class GuitarVideoController {
     @future
     private static void retryUpdatePage(String pageName, String sessionKey, String videoId) {
         try {
-            savePageState(pageName, videoId);
             List<MessagingSession> sessions = [
                 SELECT Id FROM MessagingSession
                 WHERE Conversation.ConversationIdentifier = :sessionKey
@@ -247,51 +233,17 @@ global without sharing class GuitarVideoController {
         }
     }
 
-    @AuraEnabled(cacheable=false)
-    public static String getAgentPageContext(String sessionKey) {
-        try {
-            FilterState__c state = FilterState__c.getOrgDefaults();
-            return state.Current_Page__c != null ? state.Current_Page__c : '(blank)';
-        } catch (Exception e) {
-            return 'error: ' + e.getMessage().left(60);
-        }
-    }
-
-    @AuraEnabled(cacheable=false)
-    global static Map<String, String> getFilterSettings() {
-        FilterState__c state = FilterState__c.getOrgDefaults();
-        Map<String, String> result = new Map<String, String>();
-        result.put('level',    state.Level__c    != null ? state.Level__c    : '');
-        result.put('category', state.Category__c != null ? state.Category__c : '');
-        result.put('action', state.Action__c != null ? state.Action__c : '');
-        result.put('actionVideoId', state.Action_Video_Id__c != null ? state.Action_Video_Id__c : '');
-        return result;
-    }
-
     private static Id getContactId() {
         List<User> users = [SELECT ContactId FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
         return (users.isEmpty() || users[0].ContactId == null) ? null : users[0].ContactId;
     }
 
     private static String getSessionPage(String routableId) {
-        FilterState__c state = FilterState__c.getOrgDefaults();
-        return state.Current_Page__c != null ? state.Current_Page__c : '';
-    }
-
-    private static void savePageState(String pageName, String videoId) {
-        FilterState__c state = FilterState__c.getOrgDefaults();
-        state.Current_Page__c = pageName;
-        state.Current_Video_Id__c = String.isNotBlank(videoId) ? videoId : null;
-        if (pageName == 'catalog') {
-            state.Level__c = null;
-            state.Category__c = null;
-        }
-        if (pageName != 'video') {
-            state.Action__c = null;
-            state.Action_Video_Id__c = null;
-        }
-        Id contactId = getContactId();
-        state.Current_Contact_Id__c = contactId != null ? String.valueOf(contactId) : null;
-        upsert state;
+        if (String.isBlank(routableId)) return '';
+        List<MessagingSession> sessions = [
+            SELECT Current_Page__c FROM MessagingSession WHERE Id = :routableId LIMIT 1
+        ];
+        if (sessions.isEmpty() || sessions[0].Current_Page__c == null) return '';
+        return sessions[0].Current_Page__c;
     }
 }

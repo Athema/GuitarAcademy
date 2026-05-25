@@ -80,12 +80,7 @@ global without sharing class GuitarPurchaseController {
     }
 
     private static void publishAccessAction(String action, String videoId, String routableId) {
-        // Legacy FilterState__c write — kept during migration so the polling UI keeps working.
-        FilterState__c state = FilterState__c.getOrgDefaults();
-        state.Action__c = action;
-        state.Action_Video_Id__c = videoId;
-        upsert state;
-        // New: stamp the agent's own MessagingSession so the outbound read can move off FilterState__c.
+        // Stamp the action on the agent's own MessagingSession — the LWC reads it event-driven.
         stampSession(routableId, action, videoId);
     }
 
