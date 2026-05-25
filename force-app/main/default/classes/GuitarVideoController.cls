@@ -198,6 +198,12 @@ global without sharing class GuitarVideoController {
                 SObject ms = new MessagingSession(Id = sessions[0].Id);
                 ms.put('Current_Page__c', pageName);
                 ms.put('Current_Video_Id__c', String.isNotBlank(videoId) ? videoId : null);
+                // Navigating to any non-video page clears the agent FILTER action, so the catalog
+                // opens clean — cleared in session context, not just hidden in the UI.
+                if (pageName != 'video') {
+                    ms.put('Action__c', null);
+                    ms.put('ActionJSON__c', null);
+                }
                 update ms;
             } else {
                 retryUpdatePage(pageName, sessionKey, videoId);
@@ -220,6 +226,12 @@ global without sharing class GuitarVideoController {
                 SObject ms = new MessagingSession(Id = sessions[0].Id);
                 ms.put('Current_Page__c', pageName);
                 ms.put('Current_Video_Id__c', String.isNotBlank(videoId) ? videoId : null);
+                // Navigating to any non-video page clears the agent FILTER action, so the catalog
+                // opens clean — cleared in session context, not just hidden in the UI.
+                if (pageName != 'video') {
+                    ms.put('Action__c', null);
+                    ms.put('ActionJSON__c', null);
+                }
                 update ms;
             }
         } catch (Exception e) {

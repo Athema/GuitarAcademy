@@ -1,7 +1,7 @@
 import { LightningElement, track, wire } from 'lwc';
 import getVideos from '@salesforce/apex/GuitarVideoController.getVideos';
 import getMyAccess from '@salesforce/apex/GuitarVideoController.getMyAccess';
-import getFilterSettings from '@salesforce/apex/GuitarVideoController.getFilterSettings';
+import getAgentAction from '@salesforce/apex/GuitarVideoController.getAgentAction';
 
 export default class GuitarVideoCatalog extends LightningElement {
     @track selectedLevel = '';
@@ -11,7 +11,6 @@ export default class GuitarVideoCatalog extends LightningElement {
     _conversationId = null;
     _openHandler = null;
     _messageHandler = null;
-    _filterPoll = null;
     _lastAccessActionKey = '';
 
     @wire(getVideos, { level: '$selectedLevel', category: '$selectedCategory' })
@@ -28,38 +27,44 @@ export default class GuitarVideoCatalog extends LightningElement {
             if (this._conversationId) localStorage.setItem('ga_conversationId', this._conversationId);
         };
 
-        this._applyFilter = () => {
-            getFilterSettings()
-                .then(result => {
-                    if (!result) return;
+        // Outbound is event-driven off the agent's reply — read the action from the
+        // MessagingSession (no polling). Only agent messages carry conversationEntry.
+        this._messageHandler = (event) => {
+            if (!event.detail?.conversationEntry) return;
+            this._checkAgentAction();
+        };
+
+        window.addEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+        window.addEventListener('onEmbeddedMessageSent', this._messageHandler);
+
+        // Intentionally NOT applying any pre-existing filter on load — navigating to the catalog
+        // clears the filter (the session's FILTER action is cleared by updateContactPage on
+        // non-video pages), so the catalog always opens on "all lessons".
+    }
+
+    disconnectedCallback() {
+        if (this._openHandler)   window.removeEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+        if (this._messageHandler) window.removeEventListener('onEmbeddedMessageSent', this._messageHandler);
+    }
+
+    _checkAgentAction() {
+        if (!this._conversationId) return;
+        getAgentAction({ conversationId: this._conversationId })
+            .then(result => {
+                if (!result) return;
+                // Apply the filter ONLY on a FILTER action — otherwise a later
+                // PURCHASE/SUBSCRIBE read (empty level/category) would wipe the active filter.
+                if (result.action === 'FILTER') {
                     const lvl = result.level    || '';
                     const cat = result.category || '';
                     if (lvl !== this.selectedLevel || cat !== this.selectedCategory) {
                         this.selectedLevel    = lvl;
                         this.selectedCategory = cat;
                     }
-                    this._handleAccessAction(result);
-                })
-                .catch(() => {});
-        };
-
-        // Trigger immediately on agent messages (only agent messages carry conversationEntry)
-        this._messageHandler = (event) => {
-            if (!event.detail?.conversationEntry) return;
-            this._applyFilter();
-        };
-
-        // Poll every 2 s as fallback (covers timing gaps and page-load state)
-        this._filterPoll = setInterval(this._applyFilter, 2000);
-
-        window.addEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
-        window.addEventListener('onEmbeddedMessageSent', this._messageHandler);
-    }
-
-    disconnectedCallback() {
-        if (this._openHandler)   window.removeEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
-        if (this._messageHandler) window.removeEventListener('onEmbeddedMessageSent', this._messageHandler);
-        if (this._filterPoll)    clearInterval(this._filterPoll);
+                }
+                this._handleAccessAction(result);
+            })
+            .catch(() => {});
     }
 
     get videosWithAccess() {
@@ -94,6 +99,27 @@ export default class GuitarVideoCatalog extends LightningElement {
 
     get hasError() {
         return !!this.wiredVideos?.error;
+    }
+
+    // Options rendered with `selected` bound to state, so an agent-applied filter
+    // (or a manual change) is reflected in the dropdowns.
+    get levelOptions() {
+        return [
+            { value: '', label: 'All Levels' },
+            { value: 'Beginner', label: 'Beginner' },
+            { value: 'Intermediate', label: 'Intermediate' },
+            { value: 'Advanced', label: 'Advanced' }
+        ].map(o => ({ ...o, selected: o.value === this.selectedLevel }));
+    }
+
+    get categoryOptions() {
+        return [
+            { value: '', label: 'All Categories' },
+            { value: 'Technique', label: 'Technique' },
+            { value: 'Theory', label: 'Theory' },
+            { value: 'Song Lesson', label: 'Song Lesson' },
+            { value: 'Gear & Tone', label: 'Gear & Tone' }
+        ].map(o => ({ ...o, selected: o.value === this.selectedCategory }));
     }
 
     handleLevelChange(event) {

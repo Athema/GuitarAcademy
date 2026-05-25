@@ -11,20 +11,17 @@
                 <div class="filter-group">
                     <label for="level-filter">Level</label>
                     <select id="level-filter" onchange={handleLevelChange}>
-                        <option value="">All Levels</option>
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Advanced">Advanced</option>
+                        <template for:each={levelOptions} for:item="o">
+                            <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                        </template>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label for="cat-filter">Category</label>
                     <select id="cat-filter" onchange={handleCategoryChange}>
-                        <option value="">All Categories</option>
-                        <option value="Technique">Technique</option>
-                        <option value="Theory">Theory</option>
-                        <option value="Song Lesson">Song Lesson</option>
-                        <option value="Gear &amp; Tone">Gear &amp; Tone</option>
+                        <template for:each={categoryOptions} for:item="o">
+                            <option key={o.value} value={o.value} selected={o.selected}>{o.label}</option>
+                        </template>
                     </select>
                 </div>
             </div>
