@@ -1,5 +1,13 @@
 global without sharing class GuitarSessionDebugController {
 
+    // Master on/off switch for the debug panel — read from the Debug_Config__c custom setting
+    // (org default). Toggle in Setup > Custom Settings > Guitar Debug Config > Manage. No deploy needed.
+    @AuraEnabled(cacheable=false)
+    public static Boolean isDebugEnabled() {
+        Debug_Config__c cfg = Debug_Config__c.getOrgDefaults();
+        return cfg != null && cfg.Enabled__c == true;
+    }
+
     // Returns a full snapshot of the agent's-eye view of the MessagingSession for a given
     // conversationId. The session resolved here (by ConversationIdentifier) is the SAME record
     // the agent reads by routableId — so these field values are exactly what the agent sees.

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Enabled__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Master on/off switch for the guitarSessionDebug diagnostic panel. ON = panel renders for logged-in users. OFF (default) = panel is fully silent (no render, no Apex calls). Set on the org-default record.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Check to show the on-page debug panel (logged-in users only). Leave unchecked for live demos.</inlineHelpText>
+    <label>Enabled</label>
+    <type>Checkbox</type>
+</CustomField>

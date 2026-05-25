@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <description>DEBUG TOGGLE for the Guitar Academy demo. When the Enabled checkbox on the org-default record is ON, the on-page diagnostic panel (guitarSessionDebug — shows MessagingSession state, agent page context, guard status, and an event log) renders for logged-in users. Leave OFF for live demos. Reusable scaffolding — flip ON only while debugging. No deploy needed to toggle: edit the org-default value in Setup &gt; Custom Settings &gt; Guitar Debug Config &gt; Manage.</description>
+    <enableFeeds>false</enableFeeds>
+    <label>Guitar Debug Config</label>
+    <visibility>Public</visibility>
+</CustomObject>

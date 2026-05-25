@@ -1,6 +1,7 @@
 import { LightningElement, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import isGuest from '@salesforce/user/isGuest';
+import isDebugEnabled from '@salesforce/apex/GuitarSessionDebugController.isDebugEnabled';
 import updateContactPage from '@salesforce/apex/GuitarVideoController.updateContactPage';
 import getDebugSnapshot from '@salesforce/apex/GuitarSessionDebugController.getDebugSnapshot';
 
@@ -60,7 +61,7 @@ export default class GuitarSessionDebug extends LightningElement {
     _msgHandler = null;
     _poll = null;
 
-    isLoggedIn = !isGuest;
+    debugOn = false;
 
     get logLines() {
         return this.log.map((text, i) => ({ id: i, text }));
@@ -78,7 +79,18 @@ export default class GuitarSessionDebug extends LightningElement {
     }
 
     connectedCallback() {
-        if (isGuest) return; // debug tooling is for logged-in students only
+        if (isGuest) return; // debug tooling is for logged-in users only
+        // Gate behind the Debug_Config__c custom setting — off by default, no deploy to toggle.
+        isDebugEnabled()
+            .then((enabled) => {
+                if (!enabled) return;
+                this.debugOn = true;
+                this._init();
+            })
+            .catch(() => {});
+    }
+
+    _init() {
         this._conversationId = localStorage.getItem(CONV_KEY) || null;
         this.conversationId = this._conversationId ? this._conversationId.slice(0, 12) + '…' : '(none)';
 
@@ -141,7 +153,7 @@ export default class GuitarSessionDebug extends LightningElement {
 
     @wire(CurrentPageReference)
     handlePageChange(pageRef) {
-        if (isGuest || !pageRef) return;
+        if (isGuest || !this.debugOn || !pageRef) return;
         const type = pageRef.type || '';
         const name = pageRef.attributes?.name || pageRef.attributes?.apiName || '';
         this.rawPageRef = `${type}|${name}`;
