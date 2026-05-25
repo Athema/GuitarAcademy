@@ -238,6 +238,34 @@ global without sharing class GuitarVideoController {
         return (users.isEmpty() || users[0].ContactId == null) ? null : users[0].ContactId;
     }
 
+    // Links the conversation's MessagingEndUser to the logged-in student's Contact, so the
+    // transcript/session stays attached to the right Contact (and an Omnichannel human agent
+    // sees who they're talking to). Called by the LWC on the student's first message. Idempotent.
+    @AuraEnabled(cacheable=false)
+    public static void linkSessionContact(String conversationId) {
+        try {
+            if (String.isBlank(conversationId)) return;
+            Id contactId = getContactId();
+            if (contactId == null) return;
+            List<MessagingSession> sessions = [
+                SELECT MessagingEndUserId, MessagingEndUser.ContactId
+                FROM MessagingSession
+                WHERE Conversation.ConversationIdentifier = :conversationId
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+            if (sessions.isEmpty() || sessions[0].MessagingEndUserId == null) return;
+            MessagingSession ms = sessions[0];
+            if (ms.MessagingEndUser != null && ms.MessagingEndUser.ContactId == contactId) return; // already linked
+            MessagingEndUserLinker.Request req = new MessagingEndUserLinker.Request();
+            req.messagingEndUserId = ms.MessagingEndUserId;
+            req.contactId = contactId;
+            MessagingEndUserLinker.linkContact(new List<MessagingEndUserLinker.Request>{ req });
+        } catch (Exception e) {
+            System.debug('linkSessionContact error: ' + e.getMessage());
+        }
+    }
+
     private static String getSessionPage(String routableId) {
         if (String.isBlank(routableId)) return '';
         List<MessagingSession> sessions = [

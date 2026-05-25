@@ -1,8 +1,10 @@
 import { LightningElement, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import updateContactPage from '@salesforce/apex/GuitarVideoController.updateContactPage';
+import linkSessionContact from '@salesforce/apex/GuitarVideoController.linkSessionContact';
 
 const CONV_KEY = 'ga_conversationId';
+const LINKED_KEY = 'ga_meu_linked';
 
 function resolvePage(pageRef) {
     if (getVideoIdFromUrl()) return 'video';
@@ -38,6 +40,7 @@ export default class GuitarPageTracker extends LightningElement {
     _lastPage = null;
     _conversationId = null;
     _openHandler = null;
+    _messageHandler = null;
 
     connectedCallback() {
         // Restore conversationId across navigation (component is recreated on each page)
@@ -57,10 +60,24 @@ export default class GuitarPageTracker extends LightningElement {
             }
         };
         window.addEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+
+        // On the student's FIRST message (sender role EndUser), link the MessagingEndUser to their
+        // Contact — once per conversation. Only links engaged conversations (not abandoned opens).
+        this._messageHandler = (event) => {
+            const role = event.detail?.conversationEntry?.sender?.role || event.detail?.sender?.role;
+            if (role !== 'EndUser') return;
+            if (!this._conversationId) return;
+            if (localStorage.getItem(LINKED_KEY) === this._conversationId) return;
+            linkSessionContact({ conversationId: this._conversationId })
+                .then(() => localStorage.setItem(LINKED_KEY, this._conversationId))
+                .catch(() => {});
+        };
+        window.addEventListener('onEmbeddedMessageSent', this._messageHandler);
     }
 
     disconnectedCallback() {
         if (this._openHandler) window.removeEventListener('onEmbeddedMessagingConversationOpened', this._openHandler);
+        if (this._messageHandler) window.removeEventListener('onEmbeddedMessageSent', this._messageHandler);
     }
 
     @wire(CurrentPageReference)
