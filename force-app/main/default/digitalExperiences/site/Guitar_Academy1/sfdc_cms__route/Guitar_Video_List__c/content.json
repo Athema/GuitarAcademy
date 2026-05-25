@@ -1,0 +1,12 @@
+{
+  "type" : "sfdc_cms__route",
+  "title" : "Guitar Video List",
+  "contentBody" : {
+    "activeViewId" : "Guitar_Video_List",
+    "configurationTags" : [ ],
+    "pageAccess" : "UseParent",
+    "routeType" : "list-Guitar_Video__c",
+    "urlPrefix" : "guitar-video"
+  },
+  "urlName" : "guitar-video-list"
+}
