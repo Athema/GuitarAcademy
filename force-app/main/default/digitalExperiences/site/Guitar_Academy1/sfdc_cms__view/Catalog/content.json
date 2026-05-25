@@ -33,18 +33,6 @@
           "definition" : "community_layout:section",
           "id" : "ca50653b-3664-4584-8719-db35a044ec12",
           "type" : "component"
-        }, {
-          "attributes" : {
-            "clientVersion" : "WebV1",
-            "deploymentName" : "Guitar_Academy_Channel",
-            "hideChatButtonOnLoad" : "Default",
-            "isExpSiteAuthMode" : false,
-            "scrtUrl" : "https://orgfarm-96c3beb92c-dev-ed.develop.my.salesforce-scrt.com",
-            "siteEndpoint" : "https://orgfarm-96c3beb92c-dev-ed.develop.my.site.com/ESWGuitarAcademyChannel1779614429251"
-          },
-          "definition" : "experience_messaging:embeddedMessaging",
-          "id" : "ba52f532-52e3-4f97-b910-ad177fbe2d64",
-          "type" : "component"
         } ],
         "id" : "5ee5654f-e439-4c9b-9514-c09c0f4cad64",
         "name" : "content",
