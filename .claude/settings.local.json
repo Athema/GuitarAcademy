@@ -44,7 +44,14 @@
       "Bash(cat force-app/main/default/lwc/guitarSessionDebug/guitarSessionDebug.js-meta.xml)",
       "Bash(grep -rl \"guitarSessionDebug\\\\|sessionDebug\\\\|SessionDebug\" force-app/main/default/digitalExperiences/)",
       "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app/main/default/permissionsets/Guitar_Academy_Student.permissionset-meta.xml --target-org GuitarAcademy 2>&1 | Select-Object -Last 3)",
-      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app/main/default/classes/GuitarPurchaseController.cls --source-dir force-app/main/default/classes/GuitarSubscriptionController.cls --target-org GuitarAcademy 2>&1 | Out-Null; sf project deploy report --use-most-recent --target-org GuitarAcademy 2>&1 | Select-String \"Succeeded|Failed|numberComponentErrors|Error:\" | Select-Object -First 5)"
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --source-dir force-app/main/default/classes/GuitarPurchaseController.cls --source-dir force-app/main/default/classes/GuitarSubscriptionController.cls --target-org GuitarAcademy 2>&1 | Out-Null; sf project deploy report --use-most-recent --target-org GuitarAcademy 2>&1 | Select-String \"Succeeded|Failed|numberComponentErrors|Error:\" | Select-Object -First 5)",
+      "Bash(mkdir -p .claude/skills)",
+      "Bash(cp -r .tmp_sfskills/skills/developing-agentforce .claude/skills/)",
+      "Bash(rm -rf .tmp_sfskills)",
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf project deploy start --metadata ApexClass:GuitarPageContextController ApexClass:GuitarPurchaseController --target-org GuitarAcademy --json)",
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf data query --query \"SELECT COUNT\\(Id\\) total FROM MessagingSession\" --target-org GuitarAcademy --json; sf data query --query \"SELECT COUNT\\(Id\\) total FROM MessagingEndUser\" --target-org GuitarAcademy --json)",
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf data query --query \"SELECT Id, Status FROM MessagingSession\" --target-org GuitarAcademy --json)",
+      "PowerShell($env:NODE_TLS_REJECT_UNAUTHORIZED=0; sf data delete record --sobject MessagingSession --record-id 0MwgL00000Angd4SAB --target-org GuitarAcademy --json)"
     ]
   }
 }

@@ -38,6 +38,13 @@ global without sharing class GuitarPurchaseController {
                     continue;
                 }
                 Id videoId = (Id)videoIdStr;
+                // Backstop: an active subscription already grants access to every lesson.
+                // The agent's `available when` gate normally hides this action, but never rely on the gate alone.
+                if ([SELECT COUNT() FROM Subscription__c WHERE Contact__c = :contactId AND Status__c = 'Active'] > 0) {
+                    res.message = 'Your active subscription already gives you full access to every lesson, including this one — no purchase needed. Just hit play!';
+                    results.add(res);
+                    continue;
+                }
                 if ([SELECT COUNT() FROM Video_Purchase__c WHERE Contact__c = :contactId AND Video__c = :videoId] > 0) {
                     Guitar_Video__c already = [SELECT Name FROM Guitar_Video__c WHERE Id = :videoId LIMIT 1];
                     res.message = 'You already own "' + already.Name + '". You can watch it any time.';

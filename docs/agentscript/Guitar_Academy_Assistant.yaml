@@ -1,9 +1,13 @@
 system:
-    instructions: "You are an AI Agent."
+    instructions: |
+        You are "Kirk," a laid-back, rock-and-roll employee working the floor at the Guitar Academy shop.
+        You talk like a friendly guitar-store regular: warm, a little playful, the occasional rock reference — but always helpful and never over the top.
+        Your job is real: help students find lessons, buy individual lessons, answer subscription questions, complete subscriptions, and hand off to a human when asked.
+        Keep the rock-and-roll flavor light — one bit of personality per message, then get them what they need. Never let the persona get in the way of actually helping.
     messages:
         welcome: |
-            Hi, I'm an AI assistant. How can I help you?
-        error: "Sorry, it looks like something has gone wrong."
+            Hey there, welcome to Guitar Academy — Kirk here. 🎸 Looking to find a lesson, grab a track, or sort out a subscription? Let's make some noise.
+        error: "Whoa, hit a bum note there — something went wrong on my end. Mind trying that again?"
 
 config:
     developer_name: "Guitar_Academy_Assistant"
@@ -37,6 +41,8 @@ variables:
         description: "Current page the student is on: home, catalog, or video. Refreshed from MessagingSession before ecommerce reasoning."
     currentVideoId: mutable string
         description: "Guitar_Video__c Id of the video the student is watching. Refreshed from MessagingSession before ecommerce reasoning."
+    currentVideoOwned: mutable string
+        description: "Whether the student already has access to currentVideoId (purchased that video or has an active subscription). 'true' or 'false'. Refreshed before ecommerce reasoning."
 
 knowledge:
     rag_feature_config_id: ""
@@ -114,6 +120,7 @@ subagent ecommerce:
             with routableId = @variables.RoutableId
             set @variables.currentPage = @outputs.currentPage
             set @variables.currentVideoId = @outputs.currentVideoId
+            set @variables.currentVideoOwned = @outputs.currentVideoOwned
     reasoning:
         instructions: ->
             | You know the student's current page from @variables.currentPage.
@@ -123,7 +130,8 @@ subagent ecommerce:
             | Subscription is account-wide and can be created from any page: home, catalog, or video.
             | If @variables.currentVideoId is not blank, treat the student as being on a specific lesson video page for purchase decisions, even if @variables.currentPage is still catching up.
             | If the student asks to filter or browse lessons and the page is "catalog", you must call filter_catalog. Do not describe filtered results without calling filter_catalog.
-            | If the student asks to buy, purchase, unlock, or get access to the current lesson/video/song and either the page is "video" or @variables.currentVideoId is not blank, you must call purchase_video immediately. This includes follow-ups like "do it", "yes", "this one", "purchase this one", and "I am there" when the recent conversation is about purchase. Do not ask them to confirm the page again.
+            | If the student asks to buy the current lesson but @variables.currentVideoOwned is "true", do not attempt to purchase. Tell them they already have access — via a previous purchase or their active subscription — and can play the full lesson right now.
+            | If the student asks to buy, purchase, unlock, or get access to the current lesson/video/song and either the page is "video" or @variables.currentVideoId is not blank, and @variables.currentVideoOwned is not "true", you must call purchase_video immediately. This includes follow-ups like "do it", "yes", "this one", "purchase this one", and "I am there" when the recent conversation is about purchase. Do not ask them to confirm the page again.
             | If the student asks to buy, purchase, unlock, or get access and the page is not "video" and @variables.currentVideoId is blank, tell them to open the specific lesson's video page, then ask again. Stop after that response.
             | If the student asks to subscribe for full access from any page, call create_subscription. If the plan is unclear, ask whether they want Monthly or Annual.
             | If the student asks for any gated action from the wrong page, tell them which page to navigate to first and stop. Do not retry, remember, or complete that request after navigation. The student must ask again after reaching the correct page.
@@ -136,7 +144,7 @@ subagent ecommerce:
                 with category = ...
                 with inRoutableId = @variables.RoutableId
             purchase_video: @actions.purchase_video
-                available when @variables.currentPage == "video" || @variables.currentVideoId != ""
+                available when (@variables.currentPage == "video" || @variables.currentVideoId != "") && @variables.currentVideoOwned != "true"
                 with videoId = @variables.currentVideoId
                 with contactId = @variables.ContactId
                 with routableId = @variables.RoutableId
@@ -233,6 +241,11 @@ subagent ecommerce:
                 currentVideoId: string
                     label: "Current Video Id"
                     description: "Current Guitar_Video__c Id when the page is video"
+                    is_displayable: False
+                    filter_from_agent: True
+                currentVideoOwned: string
+                    label: "Current Video Owned"
+                    description: "'true' if the student already has access to currentVideoId (purchased it or has an active subscription), otherwise 'false'"
                     is_displayable: False
                     filter_from_agent: True
                 message: string

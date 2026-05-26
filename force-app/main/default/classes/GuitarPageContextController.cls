@@ -10,6 +10,8 @@ global without sharing class GuitarPageContextController {
         public String currentPage;
         @InvocableVariable(label='Current Video Id')
         public String currentVideoId;
+        @InvocableVariable(label='Current Video Owned')
+        public String currentVideoOwned;
         @InvocableVariable(label='Message')
         public String message;
     }
@@ -29,6 +31,7 @@ global without sharing class GuitarPageContextController {
         PageContextResult res = new PageContextResult();
         res.currentPage = '';
         res.currentVideoId = '';
+        res.currentVideoOwned = 'false';
 
         if (String.isBlank(routableId)) {
             res.message = 'DEBUG: routableId was blank — no session to read.';
@@ -36,7 +39,7 @@ global without sharing class GuitarPageContextController {
         }
 
         List<MessagingSession> sessions = [
-            SELECT Id, Current_Page__c, Current_Video_Id__c
+            SELECT Id, Current_Page__c, Current_Video_Id__c, Current_Contact_Id__c
             FROM MessagingSession
             WHERE Id = :routableId
             LIMIT 1
@@ -50,7 +53,24 @@ global without sharing class GuitarPageContextController {
         MessagingSession ms = sessions[0];
         res.currentPage = ms.Current_Page__c != null ? ms.Current_Page__c : '';
         res.currentVideoId = ms.Current_Video_Id__c != null ? ms.Current_Video_Id__c : '';
-        res.message = 'DEBUG: session ' + ms.Id + ' → page=[' + res.currentPage + '] video=[' + res.currentVideoId + ']';
+
+        // Compute whether the student already has access to currentVideoId:
+        // an active subscription unlocks everything, otherwise check for a direct purchase.
+        // Mirrors the UI's "owned" badge so the agent can hide purchase_video up front.
+        String contactIdStr = ms.Current_Contact_Id__c;
+        if (String.isNotBlank(contactIdStr)) {
+            Id contactId = (Id) contactIdStr;
+            Boolean owned = false;
+            if ([SELECT COUNT() FROM Subscription__c WHERE Contact__c = :contactId AND Status__c = 'Active'] > 0) {
+                owned = true;
+            } else if (String.isNotBlank(res.currentVideoId)) {
+                Id videoId = (Id) res.currentVideoId;
+                owned = [SELECT COUNT() FROM Video_Purchase__c WHERE Contact__c = :contactId AND Video__c = :videoId] > 0;
+            }
+            res.currentVideoOwned = owned ? 'true' : 'false';
+        }
+
+        res.message = 'DEBUG: session ' + ms.Id + ' → page=[' + res.currentPage + '] video=[' + res.currentVideoId + '] owned=[' + res.currentVideoOwned + ']';
         return res;
     }
 }
